@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "465089745514",
+    "project_id": "hoodwinke-1af51",
+    "storage_bucket": "hoodwinke-1af51.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465089745514:android:b802d6cea3c46560bd3013",
+        "android_client_info": {
+          "package_name": "com.hoodwinke.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "465089745514-uljcptj92ipv3m4qvu9ni6k3t1qpdava.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hoodwinke.app",
+            "certificate_hash": "5434b77c215549ebbe74dd4f18e45e7a4e460c6a"
+          }
+        },
+        {
+          "client_id": "465089745514-tc9378mmshnn621t8kengm58b7dk48i1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvjefTMkcre44NinUBw2NXgk9SGE7ukQ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "465089745514-tc9378mmshnn621t8kengm58b7dk48i1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
