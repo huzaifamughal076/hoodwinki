@@ -133,6 +133,8 @@ class _WatchSellScreenState extends State<WatchSellScreen> {
                                  icon: Icon(Icons.error_outline, color: Colors.white),
                                  snackPosition: SnackPosition.TOP,
                                  backgroundColor: AppColors.orange);
+                                 Navigator.pop(context);
+                                 Navigator.pop(context);
                              Get.back();
 
                            }else{
@@ -184,6 +186,8 @@ class _WatchSellScreenState extends State<WatchSellScreen> {
                                  icon: Icon(Icons.error_outline, color: Colors.white),
                                  snackPosition: SnackPosition.TOP,
                                  backgroundColor: AppColors.orange);
+                             Navigator.pop(context);
+                             Navigator.pop(context);
                              Get.back();
 
                            }else{

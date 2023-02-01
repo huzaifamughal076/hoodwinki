@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Screens/Home/SubScreens/Collections.dart';
 
@@ -19,7 +20,7 @@ class Search extends StatefulWidget {
   State<Search> createState() => _SearchState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchState extends State<Search> with WidgetsBindingObserver {
 //For Storing all Users
   var _usersList = [];
   var _searchUserList=[];
@@ -145,11 +146,17 @@ class _SearchState extends State<Search> {
                         // focusNode: focusNodePassword,
                         keyboardType: TextInputType.emailAddress,
                         style: const TextStyle(color: AppColors.background),
-                        autofocus: true,
                         decoration: InputDecoration(
                           suffixIcon:
                           _isSearching
-                              ?Icon(CupertinoIcons.clear_circled_solid,color: AppColors.orange,)
+                              ?InkWell(
+                              onTap: (){
+                                FocusScope.of(context).unfocus();
+                                setState(() {
+                                  _isSearching=!_isSearching;
+                                });
+                              },
+                              child: Icon(CupertinoIcons.clear_circled_solid,color: AppColors.orange,))
                               :Icon(Icons.search,color: Colors.grey,),
                           isDense: true,
                           hintText: "Search",
@@ -276,5 +283,26 @@ class _SearchState extends State<Search> {
       ),
     );
 
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    EasyLoading.dismiss();
+
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed){
+      Future.delayed(Duration(seconds: 2),(){
+        EasyLoading.dismiss();
+      });
+    }
+  }
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    EasyLoading.dismiss();
   }
 }

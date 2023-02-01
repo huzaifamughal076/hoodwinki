@@ -9,6 +9,7 @@ import 'package:watchminter/Global/firebase_ref.dart';
 import 'package:watchminter/Models/UserModel.dart';
 import 'package:watchminter/Screens/Home/MessageScreen.dart';
 
+import '../../../Constants/my_date_utils.dart';
 import '../../ChatScreens/CreateNewMessage.dart';
 
 class Chat extends StatefulWidget {
@@ -79,7 +80,7 @@ class _ChatState extends State<Chat> {
                                       return Container();
                                     } else {
                                       receiversList.add(data["receiverId"]);
-                                      return ChatTile(index, data["receiverId"],
+                                      return ChatTile(index,data['time'].toString(), data["receiverId"],
                                           data["message"],widget.userModel);
                                     }
                                   });
@@ -94,7 +95,7 @@ class _ChatState extends State<Chat> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-           Get.to(CreateNewMessage(widget.userModel));
+            Get.to(CreateNewMessage(widget.userModel));
           },
           label: Row(children: [
             Text("Create new message"),
@@ -110,12 +111,13 @@ class _ChatState extends State<Chat> {
 
 class ChatTile extends StatefulWidget {
   final int index;
+  final String time;
   final String receiverId;
   final String message;
   final UserModel senderModel;
 
 
-  ChatTile(this.index, this.receiverId, this.message, this.senderModel,{Key? key})
+  ChatTile(this.index,this.time, this.receiverId, this.message, this.senderModel,{Key? key})
       : super(key: key);
 
   @override
@@ -143,7 +145,7 @@ class _ChatTileState extends State<ChatTile> {
                 child: CircleAvatar(
                   radius: 30, // Image radius
                   backgroundColor: isEven ? AppColors.orange : Colors.white,
-                  backgroundImage: AssetImage("assets/images/watch.png"),
+                  backgroundImage: receiverUser.image!=null ? NetworkImage(receiverUser.image):AssetImage("assets/images/watch.png") as ImageProvider,
                 ),
               ),
             ),
@@ -173,7 +175,7 @@ class _ChatTileState extends State<ChatTile> {
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: Text(
-                  "12:00 PM",
+                  MyDatUtil.getFormattedTime(context: context, time: widget.time.toString()),
                   style: TextStyle(color: Colors.grey),
                 ),
               ),

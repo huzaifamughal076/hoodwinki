@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -59,13 +61,20 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                       Align(
                         alignment: Alignment.bottomCenter,
                         child: Material(
+                          color: Colors.transparent,
                           elevation: 20,
                           borderRadius: BorderRadius.circular(50),
-                          child: CircleAvatar(
-                            radius: 50, // Image radius
-                            backgroundColor: AppColors.orange,
-                            backgroundImage:
-                            AssetImage("assets/images/watch.png"),
+                          child: ClipRRect(
+                            borderRadius:
+                            BorderRadius.circular(MediaQuery.of(context).size.height * .2),
+                            child: CachedNetworkImage(
+                                width: MediaQuery.of(context).size.height * .15,
+                                height: MediaQuery.of(context).size.height * .15,
+                                fit: BoxFit.cover,
+                                imageUrl: widget.data['image']??"assets/images/watch.png",
+                                placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
+                                errorWidget: (context, url, error) =>Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"))
+                            ),
                           ),
                         ),
                       )
@@ -80,6 +89,20 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold),
                 ).marginOnly(top: 12),
+                InkWell(
+                  onTap: ()async{
+                    await Clipboard.setData(ClipboardData(text: widget.data['id']));
+                    Get.snackbar("Copy Successfull", "Id copied to clipboard",
+                        colorText: AppColors.white,
+                        icon: Icon(Icons.error_outline, color: Colors.white),
+                        snackPosition: SnackPosition.TOP,
+                        backgroundColor: AppColors.orange);
+                  },
+                  child: Text(
+                    widget.data['id'],
+                    style: TextStyle(color: AppColors.orange, letterSpacing: 2),
+                  ).marginOnly(top: 10),
+                ),
                 InkWell(
                   onTap: (){
                     print("Clicked");
@@ -127,9 +150,10 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                         else {
                           EasyLoading.dismiss();
                           return ListView.builder(
+                            padding: EdgeInsets.symmetric(horizontal: 15),
                               scrollDirection: Axis.horizontal,
                               physics: ScrollPhysics(),
-                              shrinkWrap: true,
+                              shrinkWrap: false,
                               primary: true,
                               itemCount:  snapshot.data.docs.length,
                               itemBuilder: (context, index) {
@@ -269,22 +293,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                   alignment: Alignment.center,
                   child: Text("You have no reviews yet"),
                 ).marginOnly(top: 10)
-
-                // Material(
-                //     elevation: 10,
-                //     borderRadius: BorderRadius.circular(10),
-                //     child: Container(
-                //       width: MediaQuery.of(context).size.width,
-                //       decoration: BoxDecoration(
-                //           color: Colors.white,
-                //           borderRadius: BorderRadius.circular(10)),
-                //       child: ListView.builder(
-                //           itemCount: 5,
-                //           shrinkWrap: true,
-                //           itemBuilder: (BuildContext context, int index) {
-                //             return ReviewTile();
-                //           }),
-                //     )).marginOnly(left: 12, right: 12, top: 10),
               ],
             ),
           )
@@ -331,6 +339,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
 
   @override
   void initState() {
+    EasyLoading.dismiss();
     getCurrentUser();
     getReceiverUser();
     EasyLoading.dismiss();

@@ -87,15 +87,46 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                       ).marginOnly(top: 30, left: 12)),
                 ),
                 CarouselSlider(
-                  options: CarouselOptions(height: 200.0,viewportFraction: 1.0),
+                  options: CarouselOptions(height: 200.0,
+                      viewportFraction: 1.0),
                   items: imageFileList!.isNotEmpty?imageFileList?.map((i) {
                     return Builder(
                       builder: (BuildContext context) {
-                        return Container(
-                            width: MediaQuery.of(context).size.width,
-                            margin: EdgeInsets.symmetric(horizontal: 5.0),
-                            decoration: BoxDecoration(color: Colors.white),
-                            child: Image.file(File(i.path)));
+                        return InkWell(
+                          onTap:(){
+                            Get.defaultDialog(
+                              barrierDismissible: false,
+                              backgroundColor: Colors.transparent,
+                              content: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(width: MediaQuery.of(context).size.width,
+                                  color: Colors.transparent,
+                                  child: Image.file(File(i.path),fit: BoxFit.contain,),),
+                                  Positioned(
+                                    right: 5,
+                                    top: 5,
+                                    child: InkWell(
+                                      onTap: (){
+                                        Navigator.pop(context);
+                                      },
+                                      child: ClipRRect(
+                                          child: Container(color:AppColors.orange, child: Icon(Icons.close,color: Colors.white,)),
+                                        borderRadius: BorderRadius.circular(20),
+
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Container(
+                              width: MediaQuery.of(context).size.width,
+                              margin: EdgeInsets.symmetric(horizontal: 5.0),
+                              decoration: BoxDecoration(color: Colors.white),
+                              child: Image.file(File(i.path))),
+                        );
                       },
                     );
                   }).toList():[1].map((i) {
@@ -496,27 +527,27 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                     ),
                   ).marginOnly(left: 12, right: 12),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Sell watch",
-                      style:
-                          TextStyle(color: AppColors.background, fontSize: 18),
-                    ),
-                    Container(
-                        alignment: Alignment.center,
-                        height: 40,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: AppColors.orange),
-                        child: Icon(
-                          Icons.share,
-                          color: Colors.white,
-                        )),
-                  ],
-                ).marginOnly(left: 12, right: 12, top: 20),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     Text(
+                //       "Sell watch",
+                //       style:
+                //           TextStyle(color: AppColors.background, fontSize: 18),
+                //     ),
+                //     Container(
+                //         alignment: Alignment.center,
+                //         height: 40,
+                //         width: 100,
+                //         decoration: BoxDecoration(
+                //             borderRadius: BorderRadius.circular(10),
+                //             color: AppColors.orange),
+                //         child: Icon(
+                //           Icons.share,
+                //           color: Colors.white,
+                //         )),
+                //   ],
+                // ).marginOnly(left: 12, right: 12, top: 20),
                 Material(
                   elevation: 20,
                   borderRadius: BorderRadius.circular(50),
@@ -535,11 +566,6 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                             snackPosition: SnackPosition.TOP,
                             backgroundColor: AppColors.orange);
                       } else {
-                        // Get.snackbar("All Good", "Watch details are done",
-                        //     colorText: AppColors.white,
-                        //     icon: Icon(Icons.error_outline, color: Colors.white),
-                        //     snackPosition: SnackPosition.TOP,
-                        //     backgroundColor: AppColors.orange);
                         if (watchModel.forSale) {
                           if (formKey.currentState != null &&
                               formKey.currentState!.validate()) {
@@ -548,6 +574,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                             watchModel.ownerId = widget.userModel.id;
                             watchModel.createdAt = currentDate;
                             watchModel.escrow =true;
+                            watchModel.verified=widget.userModel.idVerification;
                             //print("Imagesssss: "+imageFileList!.length.toString());
                             watchModel.images=imageFileList;
                             if (widget.userModel.type == 0) {
@@ -565,17 +592,19 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                                   backgroundColor: AppColors.orange);
                             }else{
                               EasyLoading.show(status: 'Saving watch');
+                              watchModel.verified=widget.userModel.idVerification;
+                              print("Verified: "+watchModel.verified.toString());
                               await DatabaseHelper().AddWatch(watchModel);
                               EasyLoading.dismiss();
                               Get.back();
                             }
-
                           }
                         } else {
                           //watchModel.price = Price;
                           watchModel.ownerId = widget.userModel.id;
                           watchModel.createdAt = currentDate;
                           watchModel.escrow=true;
+                          watchModel.verified = widget.userModel.idVerification;
                           watchModel.images=imageFileList;
                           if (widget.userModel.type == 0) {
                             watchModel.offeredBy = "Private owner/seller";
@@ -591,6 +620,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                                 backgroundColor: AppColors.orange);
                           }else{
                             EasyLoading.show(status: 'Saving watch');
+                            watchModel.verified=widget.userModel.idVerification;
                             await DatabaseHelper().AddWatch(watchModel);
                             EasyLoading.dismiss();
                             Get.back();

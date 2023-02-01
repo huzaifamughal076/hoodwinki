@@ -12,6 +12,15 @@ class MyDatUtil {
     // return formatter.format(date);
 
   }
+  static String getFormattedYear(
+      {required BuildContext context, required String time}) {
+    final date = DateTime.fromMillisecondsSinceEpoch(int.parse(time.toString()));
+    return TimeOfDay.fromDateTime(date).format(context);
+    // DateTime date = DateTime.fromMillisecondsSinceEpoch(int.parse(time.toString()));
+    // final DateFormat formatter = new DateFormat('h:mm a');
+    // return formatter.format(date);
+
+  }
 
   static String getLastMessageTime(
       {required BuildContext context, required String time}) {
@@ -22,7 +31,7 @@ class MyDatUtil {
         now.year == sent.year) {
       return TimeOfDay.fromDateTime(sent).format(context);
     }
-    return '${sent.day} ${_getMonth(sent)}';
+    return '${sent.day} ${_getMonth(sent)} ${sent.year}';
   }
 
   //Get month name from month no. index

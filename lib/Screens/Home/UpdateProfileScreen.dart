@@ -44,10 +44,14 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   var newPassword;
   var confirmPassword;
 
+  var year;
   String? _image;
 
   @override
   void initState() {
+
+    year = widget.userModel.createdAt.toString().split("-");
+
     focusNodeEmail.addListener(() {
       if (focusNodeEmail.hasFocus) {
         setState(() {
@@ -181,10 +185,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                         height: MediaQuery.of(context).size.height * .17,
                         fit: BoxFit.cover,
                         imageUrl: widget.userModel.image??"assets/images/watch.png",
-                        placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
-                        errorWidget: (context, url, error) =>
-                            CircleAvatar(
-                                child: Icon(CupertinoIcons.person)),
+                        placeholder: (context, url) =>Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"),),
+                        errorWidget: (context, url, error) => Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"),)
                       ),
                     ),
                     Positioned(
@@ -247,6 +249,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("Email",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 12),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: email_elevation,
@@ -276,7 +281,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 12),
+                        ).marginOnly(left: 12, right: 12,top: 5),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("Name",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 5),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: name_elevation,
@@ -318,7 +326,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 15),
+                        ).marginOnly(left: 12, right: 12,top: 0),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("Current Password",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 5),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: password_elevation,
@@ -356,7 +367,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 15),
+                        ).marginOnly(left: 12, right: 12,top: 0),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("New Password",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 5),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: new_password_elevation,
@@ -398,7 +412,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 15),
+                        ).marginOnly(left: 12, right: 12,top: 0),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("Confirm Password",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 5),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: confirm_password_elevation,
@@ -440,7 +457,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 15),
+                        ).marginOnly(left: 12, right: 12,top: 0),
+                        Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text("Joined In",style: TextStyle(color: Colors.black54),)).marginOnly(left: 15, right: 12,top: 5),
                         Material(
                           borderRadius: BorderRadius.circular(10),
                           elevation: dob_elevation,
@@ -448,7 +468,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                           child: TextFormField(
                             focusNode: focusNodeDob,
                             keyboardType: TextInputType.name,
-                            initialValue: widget.userModel.dob,
+                            initialValue: year[0],
                             readOnly: true,
                             style: const TextStyle(color: AppColors.background),
                             decoration: InputDecoration(
@@ -472,15 +492,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ),
-                        ).marginOnly(left: 12, right: 12,top: 15),
+                        ).marginOnly(left: 12, right: 12,top: 0),
                         InkWell(
                           onTap: () async {
                             if(formKey.currentState!.validate()){

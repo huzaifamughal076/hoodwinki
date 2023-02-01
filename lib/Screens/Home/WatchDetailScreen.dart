@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:watchminter/Constants/AppColors.dart';
 import 'package:watchminter/Database/DatabaseHelper.dart';
 import 'package:watchminter/Models/UserModel.dart';
@@ -21,9 +24,9 @@ class WatchDetailScreen extends StatefulWidget {
   @override
   State<WatchDetailScreen> createState() => _WatchDetailScreenState();
 }
-
 class _WatchDetailScreenState extends State<WatchDetailScreen> {
   bool value = false;
+  bool contactBool =false;
   WatchModel watchModel = WatchModel();
   List images = [];
   var history = "";
@@ -34,6 +37,8 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
 
   UserModel? currentUser;
   UserModel ReceiverUser = UserModel();
+  final ImagePicker imagePicker = ImagePicker();
+  List<XFile>? imageFileList = [];
 
   @override
   void initState() {
@@ -56,10 +61,10 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
   }
 
   getReceiverUser()async{
-    EasyLoading.show();
     print(watchModel.ownerId);
     ReceiverUser= await DatabaseHelper().GetSpecificUser(watchModel.ownerId);
     EasyLoading.dismiss();
+
   }
   getWatchDetails() async {
     EasyLoading.show(status: "Loading....");
@@ -77,6 +82,11 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
       if (i + 1 < watchModel.history.length) {
         history = history + "Then it was passed to ";
       }
+    }
+    if(FirebaseAuth.instance.currentUser!.uid!=watchModel.ownerId){
+      setState(() {
+        contactBool=true;
+      });
     }
     setState(() {
       watchModel;
@@ -117,6 +127,65 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                   fontFamily: "Gotham"),
                             ).marginOnly(top: 30, left: 12)),
                       ),
+                     imageFileList!.isNotEmpty?CarouselSlider(
+                       options: CarouselOptions(height: 200.0,
+                           enableInfiniteScroll: false,
+                           scrollPhysics: const BouncingScrollPhysics(),
+                           viewportFraction: 1.0),
+                       items: imageFileList!.isNotEmpty?imageFileList?.map((i) {
+                         return Builder(
+                           builder: (BuildContext context) {
+                             return InkWell(
+                               onTap:(){
+                                 Get.defaultDialog(
+                                   barrierDismissible: false,
+                                   backgroundColor: Colors.transparent,
+                                   content: Stack(
+                                     clipBehavior: Clip.none,
+                                     children: [
+                                       Container(width: MediaQuery.of(context).size.width,
+                                         color: Colors.transparent,
+                                         child: Image.file(File(i.path),fit: BoxFit.contain,),),
+                                       Positioned(
+                                         right: 5,
+                                         top: 5,
+                                         child: InkWell(
+                                           onTap: (){
+                                             Navigator.pop(context);
+                                           },
+                                           child: ClipRRect(
+                                             child: Container(color:AppColors.orange, child: Icon(Icons.close,color: Colors.white,)),
+                                             borderRadius: BorderRadius.circular(20),
+
+                                           ),
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 );
+                               },
+                               child: Container(
+                                   width: MediaQuery.of(context).size.width,
+                                   margin: EdgeInsets.symmetric(horizontal: 5.0),
+                                   decoration: BoxDecoration(color: Colors.white),
+                                   child: Image.file(File(i.path))),
+                             );
+                           },
+                         );
+                       }).toList():[1].map((i) {
+                         return Builder(
+                           builder: (BuildContext context) {
+                             return Container(
+                                 width: MediaQuery.of(context).size.width,
+                                 margin: EdgeInsets.symmetric(horizontal: 5.0),
+                                 decoration: BoxDecoration(color: AppColors.white),
+                                 child: Image.asset(
+                                   "assets/images/watch.png",
+                                 ));
+                           },
+                         );
+                       }).toList(),
+                     ).marginOnly(top: 12):
                       CarouselSlider(
                         options: CarouselOptions(height: 200.0,
                             enableInfiniteScroll: false,
@@ -124,17 +193,47 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                           enlargeCenterPage: true,
                         ),
                         items: watchModel.images != null
-                            ? images.map((i) {
+                            ?  images.map((i) {
                                 return Builder(
                                   builder: (BuildContext context) {
-                                    return Container(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        margin: EdgeInsets.symmetric(
-                                            horizontal: 5.0),
-                                        decoration:
-                                            BoxDecoration(color: Colors.white),
-                                        child: Image.network(i));
+                                    return InkWell(
+                                      onTap: (){
+                                        Get.defaultDialog(
+                                          barrierDismissible: false,
+                                          backgroundColor: Colors.transparent,
+                                          content: Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              Container(width: MediaQuery.of(context).size.width,
+                                                color: Colors.transparent,
+                                                child: Image.network((i),fit: BoxFit.contain,),),
+                                              Positioned(
+                                                right: 5,
+                                                top: 5,
+                                                child: InkWell(
+                                                  onTap: (){
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: ClipRRect(
+                                                    child: Container(color:AppColors.orange, child: Icon(Icons.close,color: Colors.white,)),
+                                                    borderRadius: BorderRadius.circular(20),
+
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                          width:
+                                              MediaQuery.of(context).size.width,
+                                          margin: EdgeInsets.symmetric(
+                                              horizontal: 5.0),
+                                          decoration:
+                                              BoxDecoration(color: Colors.white),
+                                          child: Image.network(i)),
+                                    );
                                   },
                                 );
                               }).toList()
@@ -162,12 +261,17 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            "Add image",
-                            style: TextStyle(
-                                color: AppColors.background,
-                                fontFamily: 'Gotham',
-                                fontSize: 16),
+                          InkWell(
+                            onTap: () async {
+                              await selectImages();
+                            },
+                            child: Text(
+                              "Add image",
+                              style: TextStyle(
+                                  color: AppColors.background,
+                                  fontFamily: 'Gotham',
+                                  fontSize: 16),
+                            ),
                           ),
                           Icon(
                             Icons.add,
@@ -367,7 +471,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                     )),
                                     Expanded(
                                         child: Text(
-                                      "No",
+                                      watchModel.verified??'N/A',
                                       style: TextStyle(
                                           color: AppColors.background,
                                           fontFamily: "Gotham"),
@@ -549,9 +653,14 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                         child: InkWell(
                           onTap: () async {
                             EasyLoading.show();
-                            await DatabaseHelper().UpdateWatch(watchModel);
+                            if(imageFileList!.isNotEmpty){
+                              await DatabaseHelper().EditWatch(watchModel.displayImage,watchModel,imageFileList);
+                            }else{
+                              await DatabaseHelper().UpdateWatch(watchModel);
+                            }
+
                             EasyLoading.dismiss();
-                            Fluttertoast.showToast(msg: "Changes saved");
+                            // Fluttertoast.showToast(msg: "Changes saved");
                             Get.back();
                           },
                           child: Container(
@@ -577,7 +686,33 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                         elevation: 20,
                         borderRadius: BorderRadius.circular(50),
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () async {
+
+                            Get.defaultDialog(
+                              title: "Are You Sure",
+                              middleText: "You want to delete",
+                              cancel: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.grey
+                                  ),
+                                  onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("No")),
+                              confirm: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.orange
+                                ),
+                                  onPressed: () async {
+                                Navigator.pop(context);
+                                await DatabaseHelper().DeleteWatch(watchModel);
+                              },
+                                  child: Text("Yes")),
+                              onCancel:()=> Navigator.pop(context),
+                              onConfirm: () async => await DatabaseHelper().DeleteWatch(watchModel),
+                            );
+
+                          },
                           child: Container(
                             width: MediaQuery.of(context).size.width,
                             height: 40,
@@ -597,7 +732,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                         ),
                       ).marginOnly(left: 12, right: 12, top: 20, bottom: 40),
 
-                      if(FirebaseAuth.instance.currentUser!.uid!=watchModel.ownerId)
+                      if(contactBool==true)
                         Material(
                           elevation: 20,
                           borderRadius: BorderRadius.circular(50),
@@ -630,5 +765,29 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
               ],
             ),
           );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    EasyLoading.dismiss();
+    mounted;
+  }
+
+  selectImages() async {
+    final List<XFile>? selectedImages = await imagePicker.pickMultiImage();
+    if (selectedImages!.isNotEmpty) {
+      imageFileList!.addAll(selectedImages);
+      setState(() {
+        imageFileList;
+      });
+      print("PICKED");
+    }
+    print("Not Picked");
+    setState(() {
+      imageFileList!;
+      // watchModel;
+    });
+
   }
 }

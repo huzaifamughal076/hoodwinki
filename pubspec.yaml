@@ -38,6 +38,12 @@ dependencies:
   shared_preferences:
   #Catched Image
   cached_network_image:
+  #table
+  table_calendar:
+  #country picker
+  country_picker:
+  #emoji
+  emoji_picker_flutter:
 
 dev_dependencies:
   change_app_package_name: ^1.1.0

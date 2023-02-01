@@ -11,9 +11,7 @@ import 'package:watchminter/Screens/Home/WatchDetailScreen.dart';
 
 class Collections extends StatefulWidget {
   UserModel userModel;
-
   Collections(this.userModel, {Key? key}) : super(key: key);
-
   @override
   State<Collections> createState() => _CollectionsState();
 }
@@ -115,8 +113,6 @@ class CollectionTiles extends StatefulWidget {
 
 class _CollectionTilesState extends State<CollectionTiles> {
 
-
-
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -124,7 +120,7 @@ class _CollectionTilesState extends State<CollectionTiles> {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
-          Get.to(WatchDetailScreen(widget.data["watchId"]), transition: Transition.zoom);
+          Get.to(()=>WatchDetailScreen(widget.data["watchId"]), transition: Transition.zoom);
         },
         child: Container(
           width: 200,

@@ -64,11 +64,9 @@ class _ViewProfileState extends State<ViewProfile> {
                             width: MediaQuery.of(context).size.height * .15,
                             height: MediaQuery.of(context).size.height * .15,
                             fit: BoxFit.cover,
-                            imageUrl: widget.userModel.image,
+                            imageUrl: widget.userModel.image??"assets/images/watch.png",
                             placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
-                            errorWidget: (context, url, error) =>
-                                CircleAvatar(
-                                    child: Icon(CupertinoIcons.person)),
+                            errorWidget: (context, url, error) =>Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"))
                           ),
                         ),
                       )
@@ -286,7 +284,7 @@ class _ViewProfileState extends State<ViewProfile> {
 
 
     DateTime now = DateTime.parse(time);
-     String formattedDate = DateFormat('yyyy-EEE-d-MMM-kk:mm:ss a').format(now);
+     String formattedDate = DateFormat('yyyy').format(now);
    // time= DateTime.tryParse(time);
     // print(formattedDate.toString());
 
@@ -301,6 +299,12 @@ class _ViewProfileState extends State<ViewProfile> {
   @override
   void initState() {
     getCurrentUser();
+    EasyLoading.dismiss();
+  }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
     EasyLoading.dismiss();
   }
 }

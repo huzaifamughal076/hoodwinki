@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Constants/AppColors.dart';
+import 'package:watchminter/Database/DatabaseHelper.dart';
 import 'package:watchminter/Global/firebase_ref.dart';
 import 'package:watchminter/Models/UserModel.dart';
+
+import '../../Models/Message.dart';
 
 class CreateNewMessage extends StatefulWidget {
   final UserModel userModel;
@@ -114,13 +117,21 @@ class _CreateNewMessageState extends State<CreateNewMessage> {
                           backgroundColor: AppColors.orange);
                     } else {
                       EasyLoading.show(status: "Sending");
-                      await chatsRef.doc().set({
-                        'message': message.text.toString(),
-                        'time': DateTime.now().millisecondsSinceEpoch,
-                        'senderId': widget.userModel.id,
-                        'receiverId': recipientId,
-                        'username': widget.userModel.name
-                      });
+                      // await chatsRef.doc().set({
+                      //   'message': message.text.toString(),
+                      //   'time': DateTime.now().millisecondsSinceEpoch,
+                      //   'senderId': widget.userModel.id,
+                      //   'receiverId': recipientId,
+                      //   'username': widget.userModel.name
+                      // });
+                      Message messages=Message(
+                        message: message.text.toString(),
+                        time: DateTime.now().millisecondsSinceEpoch.toString(),
+                        senderId: widget.userModel.id,
+                        receiverId: recipientId,
+                        username: widget.userModel.name,
+                      );
+                      await DatabaseHelper.sendMessage(recipientId, messages);
                       EasyLoading.dismiss();
                       Get.back();
                     }

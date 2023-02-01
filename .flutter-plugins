@@ -1,6 +1,7 @@
 # This is a generated file; do not edit or check into version control.
 cloud_firestore=/home/app-developer/.pub-cache/hosted/pub.dev/cloud_firestore-3.5.1/
 cloud_firestore_web=/home/app-developer/.pub-cache/hosted/pub.dev/cloud_firestore_web-2.8.10/
+emoji_picker_flutter=/home/app-developer/.pub-cache/hosted/pub.dev/emoji_picker_flutter-1.5.2/
 firebase_auth=/home/app-developer/.pub-cache/hosted/pub.dev/firebase_auth-3.3.15/
 firebase_auth_web=/home/app-developer/.pub-cache/hosted/pub.dev/firebase_auth_web-3.3.19/
 firebase_core=/home/app-developer/.pub-cache/hosted/pub.dev/firebase_core-1.24.0/

@@ -54,9 +54,7 @@ class _MyProfileState extends State<MyProfile> {
                     fit: BoxFit.cover,
                     imageUrl: widget.userModel.image??"assets/images/watch.png",
                     placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
-                    errorWidget: (context, url, error) =>
-                        CircleAvatar(
-                            child: Icon(CupertinoIcons.person)),
+                    errorWidget: (context, url, error) =>Container(color: AppColors.orange, child: Image.asset("assets/images/watch.png")),
                   ),
                 ),
                 Text(
@@ -229,6 +227,12 @@ class _MyProfileState extends State<MyProfile> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    EasyLoading.dismiss();
   }
 
   void confirmDialog() {

@@ -1,10 +1,15 @@
+import 'package:country_picker/country_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:watchminter/Constants/AppColors.dart';
 import 'package:watchminter/Database/DatabaseHelper.dart';
 import 'package:watchminter/Models/UserModel.dart';
 import 'package:watchminter/Screens/Auth/Signup/SignUpSectionTwo.dart';
 import 'package:watchminter/Screens/Home/HomeScreen.dart';
+import 'package:intl/intl.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -14,11 +19,18 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  var name, email, password, confirmPassword, dob;
+  var name,firstName,lastName, email, password, confirmPassword;
   var houseNumber, street, town, province, zip, country;
   var emailValid = RegExp(
       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+
+  var passwordValid = RegExp(r"(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)");
+
+  final countryController = TextEditingController();
+  final DOB = TextEditingController();
+
   final formKey = GlobalKey<FormState>();
+  var dob ;
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +41,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           Container(
             decoration: BoxDecoration(color: AppColors.white
-                //     image: DecorationImage(
-                //   fit: BoxFit.cover,
-                //   // colorFilter: new ColorFilter.mode(
-                //   //     Colors.black.withOpacity(0.1), BlendMode.dstATop),
-                //   image: new AssetImage("assets/images/blacknwhite_bg.jpg"),
-                // )
                 ),
           ),
           SingleChildScrollView(
@@ -65,11 +71,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           TextFormField(
-                            validator: (Name) {
-                              if (Name == null || Name.isEmpty) {
-                                return "Name Required";
+                            validator: (FirstName) {
+                              if (FirstName == null || FirstName.isEmpty) {
+                                return "First Name Required";
                               } else {
-                                name = Name;
+                                setState(() {
+                                  firstName = FirstName;
+                                });
                                 return null;
                               }
                             },
@@ -77,7 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             style: const TextStyle(color: Colors.black87),
                             decoration: InputDecoration(
                               isDense: true,
-                              hintText: "Name",
+                              hintText: "First Name",
                               fillColor: Colors.white,
                               filled: true,
                               contentPadding: const EdgeInsets.all(12),
@@ -96,14 +104,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 40),
+                          TextFormField(
+                            validator: (LastName) {
+                              if (LastName == null || LastName.isEmpty) {
+                                return "Last Name Required";
+                              } else {
+                                setState(() {
+                                  lastName = LastName;
+                                });
+                                return null;
+                              }
+                            },
+                            keyboardType: TextInputType.name,
+                            style: const TextStyle(color: Colors.black87),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: "Last Name",
+                              fillColor: Colors.white,
+                              filled: true,
+                              contentPadding: const EdgeInsets.all(12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: const BorderSide(
+                                    color: AppColors.background, width: 0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: const BorderSide(
+                                    color: AppColors.background, width: 1),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                                borderSide: const BorderSide(
+                                    color: AppColors.orange, width: 1),
+                              ),
+                              hintStyle: const TextStyle(color: Colors.grey),
+                            ),
+                          ).marginOnly(left: 12, right: 12, top: 20),
+
+
+
                           TextFormField(
                             validator: (Email) {
                               if (Email == null || Email.isEmpty) {
@@ -138,11 +181,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
@@ -150,8 +188,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             validator: (Password) {
                               if (Password == null || Password.isEmpty) {
                                 return "Password required";
-                              } else if (Password.length < 6) {
-                                return "Password should be greater than 6 characters";
+                              } else if (!passwordValid.hasMatch(Password)) {
+                                Fluttertoast.showToast(msg: "Password should contain Capital, small letter & Number & Special");
+                                return "Password should contain Capital, small letter & Number & Special";
                               } else {
                                 password = Password;
                                 return null;
@@ -181,11 +220,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
@@ -225,28 +259,48 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
                           TextFormField(
-                            validator: (DOB) {
-                              if (DOB == null || DOB.isEmpty) {
-                                return "Date of birth required";
+                            onTap: () async {
+                              DateTime? pickedDate = await showDatePicker(
+                                  context: context, initialDate: DateTime.now(),
+                                  firstDate: DateTime(1800), //DateTime.now() - not to allow to choose before today.
+                                  lastDate: DateTime(2030)
+                              );
+                              if(pickedDate != null ){
+                                print(pickedDate);  //pickedDate output format => 2021-03-10 00:00:00.000
+                                String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+                                print(formattedDate); //formatted date output using intl package =>  2021-03-16
+                                //you can implement different kind of Date Format here according to your requirement
+
+                                setState(() {
+                                  dob = formattedDate;
+                                  DOB.text = formattedDate;
+                                  //set output date to TextField value.
+                                });
+                              }else{
+                                print("Date is not selected");
+                              }
+                            },
+                            controller: DOB,
+                            validator: (Date) {
+                              if (Date == null ||Date.isEmpty) {
+                                return "Date of Birth Required";
                               } else {
-                                dob = DOB;
+                                setState(() {
+                                  dob = DOB.text;
+                                });
                                 return null;
                               }
                             },
-                            keyboardType: TextInputType.datetime,
+                            keyboardType: TextInputType.text,
                             style: const TextStyle(color: Colors.black87),
+                            readOnly: true,
                             decoration: InputDecoration(
                               isDense: true,
-                              hintText: "DOB (MM/DD/YYYY)",
+                              hintText: "Date of Birth",
                               fillColor: Colors.white,
                               filled: true,
                               contentPadding: const EdgeInsets.all(12),
@@ -265,15 +319,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
-                          ).marginOnly(
-                              left: 12, right: 12, top: 20, bottom: 40),
+                          ).marginOnly(left: 12, right: 12, top: 20,bottom: 12),
                         ],
                       ),
                     ),
@@ -327,11 +375,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
@@ -367,11 +410,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
@@ -407,11 +445,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(left: 12, right: 12, top: 20),
@@ -497,11 +530,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       borderSide: const BorderSide(
                                           color: AppColors.orange, width: 1),
                                     ),
-                                    // disabledBorder: OutlineInputBorder(
-                                    //   borderRadius: BorderRadius.circular(25.0),
-                                    //   borderSide: const BorderSide(
-                                    //       color: Colors.transparent, width: 0),
-                                    // ),
                                     hintStyle:
                                         const TextStyle(color: Colors.grey),
                                   ),
@@ -512,6 +540,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ],
                           ).marginOnly(left: 12, right: 12, top: 20),
                           TextFormField(
+                            controller: countryController,
+                            onTap: (){
+                              showCountryPicker(
+                                context: context,
+                                showPhoneCode: true, // optional. Shows phone code before the country name.
+                                onSelect: (Country country) {
+                                  print('Select country: ${country.displayName}');
+                                  setState(() {
+                                    setState(() {
+                                      countryController.text =country.displayNameNoCountryCode;
+                                      country;
+                                    });
+                                  });
+                                },
+                              );
+                            },
                             validator: (Country) {
                               if (Country == null || Country.isEmpty) {
                                 return "Country required";
@@ -520,6 +564,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 return null;
                               }
                             },
+                            readOnly: true,
                             keyboardType: TextInputType.streetAddress,
                             style: const TextStyle(color: Colors.black87),
                             decoration: InputDecoration(
@@ -543,11 +588,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 borderSide: const BorderSide(
                                     color: AppColors.orange, width: 1),
                               ),
-                              // disabledBorder: OutlineInputBorder(
-                              //   borderRadius: BorderRadius.circular(25.0),
-                              //   borderSide: const BorderSide(
-                              //       color: Colors.transparent, width: 0),
-                              // ),
                               hintStyle: const TextStyle(color: Colors.grey),
                             ),
                           ).marginOnly(
@@ -560,12 +600,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     onTap: () async {
                       if (formKey.currentState != null &&
                           formKey.currentState!.validate()) {
-                        var userModel=UserModel(id: password,name: name,email: email,dob: dob,house: houseNumber,street: street,town: town,province: province,zip: zip,country: country);
-                        if (userModel == null) {
 
-                        } else {
-                          Get.to(SignUpSectionTwo(userModel),
-                              transition: Transition.leftToRight);
+                        if(dob!=null&&dob!=""){
+                          name = firstName.toString()+" "+lastName.toString();
+                          print(name.toString());
+                          var userModel=UserModel(id: password,name: name,email: email,dob: dob,house: houseNumber,street: street,town: town,province: province,zip: zip,country: country);
+                          if (userModel == null) {
+
+                          } else {
+                            Get.to(()=>SignUpSectionTwo(userModel),
+                                transition: Transition.leftToRight);
+                          }
+
+                        }else{
+                          Fluttertoast.showToast(msg: "Date of Birth Required");
+
                         }
                       }
                     },
@@ -594,9 +643,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ).marginOnly(left: 12, right: 12, top: 40, bottom: 12),
                   ),
-                  // SizedBox(
-                  //   height: 20,
-                  // )
                 ],
               ),
             ),
@@ -604,5 +650,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    dob ="";
   }
 }

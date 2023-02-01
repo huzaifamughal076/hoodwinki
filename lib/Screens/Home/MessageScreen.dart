@@ -25,6 +25,7 @@ class _MessageScreenState extends State<MessageScreen> {
   ScrollController controller = ScrollController();
   var _list = [];
   final _textController = new TextEditingController();
+  var text;
 
   _scrollListener() {
     // controller.jumpTo(controller.position.maxScrollExtent);
@@ -54,10 +55,6 @@ class _MessageScreenState extends State<MessageScreen> {
         },
         child: Scaffold(
           backgroundColor: Colors.white,
-          // appBar: AppBar(
-          //   automaticallyImplyLeading: false,
-          //   // flexibleSpace: _appBar(),
-          // ),
           body: Column(
             children: [
           Container(
@@ -179,7 +176,9 @@ class _MessageScreenState extends State<MessageScreen> {
                         ),
                         IconButton(
                           onPressed: () async{
-                            if(_textController.text.isEmpty){
+                            text= _textController.text;
+                            _textController.clear();
+                            if(text==null){
                               Get.snackbar("Error", "Message field is empty",
                                   colorText: AppColors.white,
                                   icon: Icon(Icons.error_outline, color: Colors.white),
@@ -187,13 +186,13 @@ class _MessageScreenState extends State<MessageScreen> {
                                   backgroundColor: AppColors.orange);
                             }else{
                               await chatsRef.doc().set({
-                                'message': _textController.text.toString(),
+                                'message': text.toString(),
                                 'time': DateTime.now().millisecondsSinceEpoch,
                                 'senderId': widget.senderModel.id,
                                 'receiverId': widget.receiverModel.id,
                                 'username': widget.senderModel.name
                               });
-                              _textController.clear();
+
                             }
 
                           },

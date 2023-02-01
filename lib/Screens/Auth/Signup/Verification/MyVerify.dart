@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:pinput/pinput.dart';
@@ -10,6 +12,7 @@ import 'package:watchminter/Screens/Home/HomeScreen.dart';
 
 import '../../../../Constants/AppColors.dart';
 import '../../../../Models/UserModel.dart';
+import '../../LoginScreen.dart';
 
 class MyVerify extends StatefulWidget {
   final verificationCode;
@@ -117,25 +120,32 @@ class _MyVerifyState extends State<MyVerify> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10))),
                     onPressed: () async {
+                      EasyLoading.show();
+                      FocusScope.of(context).unfocus();
                       try{
-                            PhoneAuthCredential credential= PhoneAuthProvider.credential(verificationId: widget.verificationCode, smsCode: pinned);
-                        FirebaseAuth auth = FirebaseAuth.instance;
-                        // await auth.signInWithCredential(credential);
+                            PhoneAuthCredential credential= PhoneAuthProvider.credential(verificationId: PhoneAuthScreen.verificationCode, smsCode: pinned);
+                         await FirebaseAuth.instance.signInWithCredential(credential);
                            var check= (await usersRef.doc(widget.userModel.id).get()).exists;
                            if(check==true){
                              widget.userModel.idVerification = "Yes";
                             await usersRef.doc(widget.userModel.id).update(widget.userModel.toMap());
-                            Get.offAll(HomeScreen(widget.userModel));
+                            // Get.offAll(()=>HomeScreen(widget.userModel));
+                             Get.offAll(()=> LoginScreen());
+                             Fluttertoast.showToast(msg: "Please Re-Login for Confirmations");
+                            EasyLoading.dismiss();
 
                            }else{
                              widget.userModel.idVerification ="Yes";
                             await DatabaseHelper().SignUp(widget.userModel);
+                            Get.offAll(()=>LoginScreen());
+                            EasyLoading.dismiss();
                            }
 
                       }catch(e){
                         FocusScope.of(context).unfocus();
                         print(e.toString());
                         Get.snackbar("Invalid Code", e.toString());
+                        EasyLoading.dismiss();
                       }
 
                     },
