@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:watchminter/Models/UserModel.dart';
@@ -14,13 +15,15 @@ import 'MessageScreen.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
   final data;
-   OtherUserProfileScreen(this.data,{Key? key}) : super(key: key);
+  UserModel userModel;
+   OtherUserProfileScreen(this.data,this.userModel,{Key? key}) : super(key: key);
   @override
   State<OtherUserProfileScreen> createState() => _OtherUserProfileScreenState();
 }
 class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   UserModel? currentUser;
   UserModel ReceiverUser = UserModel();
+  var ratings = 0.0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,19 +48,19 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  height: 200,
+                  height: 150,
                   child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12.0),
-                        child: Image.asset(
-                          "assets/images/cover.png",
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height,
-                        ).marginOnly(bottom: 40),
-                      ),
+                      // ClipRRect(
+                      //   borderRadius: BorderRadius.circular(12.0),
+                      //   child: Image.asset(
+                      //     "assets/images/cover.png",
+                      //     fit: BoxFit.cover,
+                      //     alignment: Alignment.center,
+                      //     width: MediaQuery.of(context).size.width,
+                      //     height: MediaQuery.of(context).size.height,
+                      //   ).marginOnly(bottom: 40),
+                      // ),
                       Align(
                         alignment: Alignment.bottomCenter,
                         child: Material(
@@ -104,9 +107,12 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                   ).marginOnly(top: 10),
                 ),
                 InkWell(
-                  onTap: (){
+                  onTap: () async {
                     print("Clicked");
-                    Get.to(MessageScreen(currentUser!, ReceiverUser!));
+                    // Get.to(MessageScreen(currentUser!, ReceiverUser!));
+                    EasyLoading.show();
+                    await DatabaseHelper.LoadSpecificChat(ReceiverUser);
+                    EasyLoading.dismiss();
                   },
                   child: Text(
                     "Send a message",
@@ -157,7 +163,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                               primary: true,
                               itemCount:  snapshot.data.docs.length,
                               itemBuilder: (context, index) {
-                                return  WatchCollectionTiles(snapshot.data.docs[index]);
+                                return  WatchCollectionTiles(snapshot.data.docs[index],widget.userModel);
                               });
                         }
                       }),
@@ -252,7 +258,8 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                                 )),
                             Expanded(
                                 child: Text(
-                                  widget.data['Rating'],
+                                   ReceiverUser.rating.toString()??"N/A",
+                                  // "N/A",
                                   style: TextStyle(
                                       color: AppColors.background,
                                       fontFamily: "Gotham"),
@@ -273,7 +280,22 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                                       color: AppColors.background,
                                       fontFamily: "Gotham"),
                                 ))
-                          ]).marginOnly(left: 12, right: 10, top: 5, bottom: 10),
+                          ]).marginOnly(left: 12, right: 10, top: 5, bottom: 5),
+                          Row(children: [
+                            Expanded(
+                                child: Text(
+                                  "About",
+                                  style: TextStyle(
+                                      color: Colors.grey, fontFamily: "Gotham"),
+                                )),
+                            Expanded(
+                                child: Text(
+                                  ReceiverUser.about,
+                                  style: TextStyle(
+                                      color: AppColors.background,
+                                      fontFamily: "Gotham"),
+                                ))
+                          ]).marginOnly(left: 12, right: 10,bottom: 5),
                         ],
                       ),
                     )).marginOnly(left: 12, right: 12, top: 10),
@@ -289,10 +311,31 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
                   ).marginOnly(left: 12, top: 12),
                 ),
 
-                Align(
+                (ReceiverUser.rating==null)?Align(
                   alignment: Alignment.center,
                   child: Text("You have no reviews yet"),
                 ).marginOnly(top: 10)
+                    :RatingBar.builder(
+                  initialRating: ratings,
+                  minRating: 1,
+                  direction: Axis.horizontal,
+                  allowHalfRating: true,
+                  ignoreGestures: true,
+                  itemCount: 5,
+                  itemSize: 25,
+                  itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                  itemBuilder: (context, _) => Icon(
+                    Icons.star,
+                    color: AppColors.orange,
+                  ),
+                  onRatingUpdate: (rating) {
+                    print(rating);
+                    setState(() {
+                      ratings = ReceiverUser.rating;
+                    });
+                  },
+                )
+
               ],
             ),
           )
@@ -302,7 +345,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
   }
   String getTime(var time) {
     DateTime now = DateTime.parse(time);
-    String formattedDate = DateFormat('yyyy-EEE-d-MMM-kk:mm:ss a').format(now);
+    String formattedDate = DateFormat('yyyy').format(now);
     // time= DateTime.tryParse(time);
     // print(formattedDate.toString());
 
@@ -333,6 +376,30 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
     ReceiverUser?.createdAt= widget.data['Created at'];
     ReceiverUser?.rating= widget.data['Rating'];
     ReceiverUser?.idVerification= widget.data['Verified'];
+    double sum=0.0;
+    var rating;
+    await usersRef.doc(widget.data['id']).get().then((val) async {
+      List pointlist = List.from(val.data()!['Rating']);
+      if(pointlist.isNotEmpty || pointlist.length!=0){
+        for(var i in pointlist){
+          print(i);
+          sum += i;
+        }
+        print("SUM: "+sum.toString());
+        rating = sum/pointlist.length;
+        print("Rating is: "+rating.toString());
+      }
+      else{
+        rating = 0.0;
+      }
+
+      ReceiverUser?.rating = rating;
+      setState(() {
+        ratings= rating;
+      });
+
+
+    });
     EasyLoading.dismiss();
 
   }
@@ -343,5 +410,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> {
     getCurrentUser();
     getReceiverUser();
     EasyLoading.dismiss();
+
   }
 }

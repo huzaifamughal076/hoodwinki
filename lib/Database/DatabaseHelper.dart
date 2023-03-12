@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -14,18 +13,24 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/snackbar/snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:watchminter/Constants/AppColors.dart';
+import 'package:watchminter/Constants/my_date_utils.dart';
 import 'package:watchminter/Global/firebase_ref.dart';
+import 'package:watchminter/Models/ChatModel.dart';
 import 'package:watchminter/Models/UserModel.dart';
 import 'package:watchminter/Models/WatchHistoryModel.dart';
 import 'package:watchminter/Models/WatchModel.dart';
 
 import 'package:intl/intl.dart';
+import 'package:watchminter/Screens/Home/CommunicationScreen.dart';
 
 import '../Models/Message.dart';
 import '../Screens/Home/HomeScreen.dart';
 
 class DatabaseHelper {
+  static List<ChatModel> chatted=[];
   static FirebaseStorage storage = FirebaseStorage.instance;
+  static List<UserModel> ReviewsNeeded=[];
+  // static var selected;
 
   Future<UserModel> SignUp(UserModel model) async {
     UserModel userModel = UserModel();
@@ -42,6 +47,7 @@ class DatabaseHelper {
       userModel = model;
       userModel.id = userid;
       userModel.createdAt = currentTime;
+      userModel.rating=[];
       await usersRef.doc(userCredential.user!.uid).set(userModel.toMap());
       await FirebaseAuth.instance.currentUser?.sendEmailVerification();
       Fluttertoast.showToast(msg: "Email Verification Link has been sent");
@@ -67,8 +73,29 @@ class DatabaseHelper {
       var userId = userCredential.user!.uid;
 
       DocumentSnapshot userData = await usersRef.doc(userId).get();
+
+        double sum=0.0;
+       var rating;
+      await usersRef.doc(userId).get().then((val) async {
+        List pointlist = List.from(val.data()!['Rating']);
+        if(pointlist.isNotEmpty || pointlist.length!=0){
+          for(var i in pointlist){
+              print(i);
+              sum += i;
+          }
+          print("SUM: "+sum.toString());
+          rating = sum/pointlist.length;
+          print("Rating is: "+rating.toString());
+        }
+        else{
+          rating = 0.0;
+        }
+
+
+      });
       Map<String, dynamic> dataFromDB = {
         'id': userData["id"],
+        'image':userData["image"],
         'Name': userData["Name"],
         'Email': userData["Email"],
         'DOB': userData["DOB"],
@@ -82,11 +109,13 @@ class DatabaseHelper {
         'Business details': userData["Business details"],
         'Type': userData["Type"],
         'Created at': userData["Created at"],
-        "Rating": userData['Rating'],
-        "Verified": userData["Verified"]
+        "Rating": rating,
+        "Verified": userData["Verified"],
+        "CountryCode": userData["CountryCode"]
       };
 
       userModel = UserModel.fromMap(dataFromDB);
+      print(userData["CountryCode"]);
 
       return userModel;
     } on FirebaseAuthException catch (e) {
@@ -97,6 +126,32 @@ class DatabaseHelper {
           backgroundColor: AppColors.orange);
       return userModel;
     }
+  }
+
+ static Future rating(userId) async {
+
+    List pointlist=[];
+    var sum;
+    var rating;
+    print(userId);
+    // await usersRef.doc(userId).get().then((val) async {
+    //   pointlist = List.from(val.data()!['Rating']);
+    //   for(var i in pointlist){
+    //     sum += int.tryParse(pointlist[i]);
+    //   }
+    //   rating = sum/pointlist.length;
+    // });
+
+    await usersRef.doc(userId).get().then((val) async {
+      List pointlist = List.from(val.data()!['Rating']);
+      // widget.usermodel.rating = pointlist;
+      // await usersRef.doc(userId).update(widget.usermodel.toMap());
+      // Get.back();
+      print(pointlist.length);
+    });
+
+    return rating;
+
   }
 
   Future AddWatch(WatchModel watchModel) async {
@@ -123,11 +178,12 @@ class DatabaseHelper {
 
   Future<WatchModel> GetWatch(String watchId) async {
     WatchModel watchModel = WatchModel();
+    var time;
     var docId;
     await Firebase.initializeApp();
     //Getting watch details
     await watchesRef.where("watchId", isEqualTo: watchId).get().then((value) {
-      value.docs.forEach((doc) {
+      value.docs.forEach((doc) async {
         watchModel.brand = doc["brand"];
         watchModel.location = doc["location"];
         watchModel.price = doc["price"];
@@ -135,7 +191,7 @@ class DatabaseHelper {
         watchModel.condition = doc["condition"];
         watchModel.displayImage = doc["displayImage"];
         watchModel.forSale = doc["forSale"];
-        watchModel.createdAt = doc["createdAt"];
+        time = doc["createdAt"];
         watchModel.model = doc["model"];
         watchModel.offeredBy = doc["offeredBy"];
         watchModel.ownerId = doc["ownerId"];
@@ -170,7 +226,7 @@ class DatabaseHelper {
     });
     //Getting watch history
     List<WatchHistoryModel> historyList = [];
-    await watchesRef.doc(docId).collection("History").orderBy("time")
+    await watchesRef.doc(docId).collection("History").orderBy("time",descending: false)
         .get()
         .then((value) {
       value.docs.forEach((element) {
@@ -187,6 +243,7 @@ class DatabaseHelper {
           backgroundColor: AppColors.orange);
       return watchModel;
     });
+    watchModel.createdAt =  MyDatUtil.getFormatedDateYear(time: time.toString());
     return watchModel;
   }
 
@@ -243,6 +300,27 @@ class DatabaseHelper {
       }
     }
 
+    double sum=0.0;
+    var rating;
+    await usersRef.doc(userId).get().then((val) async {
+      List pointlist = List.from(val.data()!['Rating']);
+      if(pointlist.isNotEmpty || pointlist.length!=0){
+        for(var i in pointlist){
+          print(i);
+          sum += i;
+        }
+        print("SUM: "+sum.toString());
+        rating = sum/pointlist.length;
+        print("Rating is: "+rating.toString());
+      }
+      else{
+        rating = 0.0;
+      }
+
+
+    });
+
+
     Map<String, dynamic> dataFromDB = {
       'id': userData["id"],
       'Name': userData["Name"],
@@ -259,8 +337,9 @@ class DatabaseHelper {
       'Business details': userData["Business details"],
       'Type': userData["Type"],
       'Created at': userData["Created at"],
-      "Rating": userData['Rating'],
+      "Rating": rating,
       "Verified": userData["Verified"],
+      "CountryCode": userData["CountryCode"]
     };
     userModel = UserModel.fromMap(dataFromDB);
 
@@ -270,7 +349,7 @@ class DatabaseHelper {
   Future UpdateWatch(WatchModel watchModel) async {
     await Firebase.initializeApp();
     var docID;
-    watchModel.escrow = true;
+    // watchModel.escrow = true;
     await watchesRef
         .where("watchId", isEqualTo: watchModel.watchId)
         .get()
@@ -391,6 +470,7 @@ class DatabaseHelper {
     DocumentSnapshot userData = await usersRef.doc(buyerId).get();
     if (userData.exists) {
       watchModel.ownerId = buyerId;
+
       await UpdateWatch(watchModel);
       watchesRef
           .where("watchId", isEqualTo: watchModel.watchId)
@@ -400,7 +480,7 @@ class DatabaseHelper {
           docID = element.id;
         });
         WatchHistoryModel watchHistoryModel = WatchHistoryModel(
-            ownerId: buyerId, buyerId: buyerId, time: currentDate);
+            ownerId: buyerId, buyerId: buyerId, time: DateTime.now().millisecondsSinceEpoch);
         await watchesRef.doc(docID).collection("History").doc().set(
             watchHistoryModel.toMap());
         print(docID);
@@ -452,14 +532,36 @@ class DatabaseHelper {
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: userModel.email, password: Password).then((value) async {
+        double sum=0.0;
+        var rating;
+        await usersRef.doc(userModel.id).get().then((val) async {
+          List pointlist = List.from(val.data()!['Rating']);
+          if(pointlist.isNotEmpty || pointlist.length!=0){
+            for(var i in pointlist){
+              print(i);
+              sum += i;
+            }
+            print("SUM: "+sum.toString());
+            rating = sum/pointlist.length;
+            print("Rating is: "+rating.toString());
+          }
+          else{
+            rating = 0.0;
+          }
+
+          userModel.rating = pointlist;
+        });
         await usersRef.doc(userModel.id).update(userModel.toMap());
-        UserModel m = await updateProfilePicture(File(_image));
-        userModel.image = m.image;
+        userModel.rating = rating;
+        if(_image!=null){
+          UserModel m = await updateProfilePicture(File(_image));
+          userModel.image = m.image;
+        }
         final prefs = await SharedPreferences.getInstance();
         String data = jsonEncode(userModel.toMap());
         await prefs.setString("usersModel", data);
         EasyLoading.dismiss();
-        Get.offAll(HomeScreen(userModel),
+        Get.offAll(HomeScreen(userModel,0),
             transition: Transition.leftToRight);
       });
     } on FirebaseAuthException catch (e) {
@@ -472,25 +574,46 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> updateProfileWithNewPassword(_image, UserModel userModel,
-      currentPassword, Password) async {
+  Future<void> updateProfileWithNewPassword(_image, UserModel userModel, currentPassword, Password) async {
     await Firebase.initializeApp();
     try {
       if (currentPassword != null) {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
             email: userModel.email, password: currentPassword).then((
             value) async {
+          double sum=0.0;
+          var rating;
+          await usersRef.doc(userModel.id).get().then((val) async {
+            List pointlist = List.from(val.data()!['Rating']);
+            if(pointlist.isNotEmpty || pointlist.length!=0){
+              for(var i in pointlist){
+                print(i);
+                sum += i;
+              }
+              print("SUM: "+sum.toString());
+              rating = sum/pointlist.length;
+              print("Rating is: "+rating.toString());
+            }
+            else{
+              rating = 0.0;
+            }
+            userModel.rating = pointlist;
+          });
+
           await FirebaseAuth.instance.currentUser!
               .updatePassword(Password)
               .then((value) async {
             await usersRef.doc(userModel.id).update(userModel.toMap());
-            UserModel m = await updateProfilePicture(File(_image));
-            userModel.image = m.image;
+            userModel.rating = rating;
+            if(_image!=null){
+              UserModel m = await updateProfilePicture(File(_image));
+              userModel.image = m.image;
+            }
             final prefs = await SharedPreferences.getInstance();
             String data = jsonEncode(userModel.toMap());
             await prefs.setString("usersModel", data);
             EasyLoading.dismiss();
-            Get.offAll(HomeScreen(userModel),
+            Get.offAll(HomeScreen(userModel,0),
                 transition: Transition.leftToRight);
           });
         });
@@ -537,17 +660,237 @@ class DatabaseHelper {
 
 
   //To Send Messages
-  static Future<void> sendMessage(id, Message message) async {
-    final time = DateTime
-        .now()
-        .millisecondsSinceEpoch
-        .toString();
 
-    final ref = firestore
+  static Future<void> sendMessage(id, Message message) async {
+    // final time = DateTime
+    //     .now()
+    //     .millisecondsSinceEpoch
+    //     .toString();
+
+    final ref = await firestore
         .collection("Chats").doc().set(message.toJson());
     // await ref.doc(time).set(message.toJson());
   }
 
+
+  static Future<void> sendNewMessage(receiverId,message,UserModel SenderModel)async{
+    ChatModel SenderChatSide =ChatModel();
+    ChatModel ReceiverChatSide =ChatModel();
+    // ReceiverModel = await DatabaseHelper().GetSpecificUser(receiverId);
+
+    Message messages=Message(
+      read: "No",
+      message: message.text.toString(),
+      time: DateTime.now().millisecondsSinceEpoch,
+      senderId: SenderModel.id,
+      receiverId: receiverId,
+      username: SenderModel.name,
+    );
+    await chatsRef.doc(SenderModel.id+receiverId).collection("message").doc().set(messages.toJson()).then((value) async{
+      var chatId = SenderModel.id+receiverId;
+      // Adding data on Chat Side
+      SenderChatSide.id = receiverId;
+      SenderChatSide.ChatId = chatId;
+      //Adding Data on Receiver Side;
+      ReceiverChatSide.id = SenderModel.id;
+      ReceiverChatSide.ChatId= chatId;
+      await usersRef.doc(SenderModel.id).collection("Chats").doc(receiverId).set(SenderChatSide.ChatMap());
+      await usersRef.doc(receiverId).collection("Chats").doc(SenderModel.id).set(ReceiverChatSide.ChatMap());
+
+    });
+
+  }
+
+  static Future<void> GetChatted(UserModel myuser)async {
+    print("Chat Called");
+    chatted.clear();
+    await usersRef.doc(myuser.id).collection("Chats").get().then((value) {
+
+      value.docs.forEach((element) async {
+        // print(element.data()["id"]);
+        // chatted = element.data()["id"];
+        ChatModel chatModel = ChatModel();
+        UserModel ReceiverModel = UserModel();
+        chatModel.id = element.data()["id"];
+        chatModel.ChatId = element.data()["ChatId"];
+        ReceiverModel =  await DatabaseHelper().GetSpecificUser(chatModel.id);
+        chatModel.name = ReceiverModel.name;
+        chatModel.CountryCode = ReceiverModel.CountryCode;
+        chatModel.email = ReceiverModel.email;
+        chatModel.country = ReceiverModel.country;
+        chatModel.zip = ReceiverModel.zip;
+        chatModel.province = ReceiverModel.province;
+        chatModel.town = ReceiverModel.town;
+        chatModel.street = ReceiverModel.street;
+        chatModel.house = ReceiverModel.house;
+        chatModel.id = ReceiverModel.id;
+        chatModel.about = ReceiverModel.about;
+        chatModel.createdAt = ReceiverModel.createdAt;
+        chatModel.image = ReceiverModel.image;
+        chatModel.businessDetails = ReceiverModel.businessDetails;
+        chatModel.dob = ReceiverModel.dob;
+        chatModel.type = ReceiverModel.type;
+        chatModel.idVerification = ReceiverModel.idVerification;
+        chatted.add(chatModel);
+      });
+      for(var i in chatted){
+        print(i.ChatId);
+      }
+    });
+
+
+  }
+
+  static Future<void> LoadSpecificChat(UserModel userModel)async{
+    bool result = (await usersRef.doc(FirebaseAuth.instance.currentUser!.uid).collection("Chats").doc(userModel.id).get()).exists;
+    if(result==true){
+      ChatModel chatModel = ChatModel();
+      UserModel ReceiverModel = UserModel();
+      UserModel myUser = UserModel();
+      await usersRef.doc(FirebaseAuth.instance.currentUser!.uid).collection("Chats").doc(userModel.id).get().then((value) async {
+        print(value.data()!['id']);
+        chatModel.id = value.data()!['id'];
+        chatModel.ChatId = value.data()!['ChatId'];
+        ReceiverModel =  await DatabaseHelper().GetSpecificUser(chatModel.id);
+        chatModel.name = ReceiverModel.name;
+        chatModel.CountryCode = ReceiverModel.CountryCode;
+        chatModel.email = ReceiverModel.email;
+        chatModel.country = ReceiverModel.country;
+        chatModel.zip = ReceiverModel.zip;
+        chatModel.province = ReceiverModel.province;
+        chatModel.town = ReceiverModel.town;
+        chatModel.street = ReceiverModel.street;
+        chatModel.house = ReceiverModel.house;
+        chatModel.id = ReceiverModel.id;
+        chatModel.about = ReceiverModel.about;
+        chatModel.createdAt = ReceiverModel.createdAt;
+        chatModel.image = ReceiverModel.image;
+        chatModel.businessDetails = ReceiverModel.businessDetails;
+        chatModel.dob = ReceiverModel.dob;
+        chatModel.type = ReceiverModel.type;
+        chatModel.idVerification = ReceiverModel.idVerification;
+      });
+      myUser = await DatabaseHelper().GetSpecificUser(FirebaseAuth.instance.currentUser!.uid);
+      Get.to(()=>CommunicationScreen(myUser, chatModel));
+    }
+    else{
+      ChatModel chatModel = ChatModel();
+      UserModel ReceiverModel = UserModel();
+      UserModel myUser = UserModel();
+
+
+      ReceiverModel =  await DatabaseHelper().GetSpecificUser(userModel.id);
+        chatModel.id = ReceiverModel.id;
+        // chatModel.ChatId = value.data()!['ChatId'];
+        chatModel.name = ReceiverModel.name;
+        chatModel.CountryCode = ReceiverModel.CountryCode;
+        chatModel.email = ReceiverModel.email;
+        chatModel.country = ReceiverModel.country;
+        chatModel.zip = ReceiverModel.zip;
+        chatModel.province = ReceiverModel.province;
+        chatModel.town = ReceiverModel.town;
+        chatModel.street = ReceiverModel.street;
+        chatModel.house = ReceiverModel.house;
+        chatModel.id = ReceiverModel.id;
+        chatModel.about = ReceiverModel.about;
+        chatModel.createdAt = ReceiverModel.createdAt;
+        chatModel.image = ReceiverModel.image;
+        chatModel.businessDetails = ReceiverModel.businessDetails;
+        chatModel.dob = ReceiverModel.dob;
+        chatModel.type = ReceiverModel.type;
+        chatModel.idVerification = ReceiverModel.idVerification;
+
+      myUser = await DatabaseHelper().GetSpecificUser(FirebaseAuth.instance.currentUser!.uid);
+      Get.to(()=>CommunicationScreen(myUser, chatModel));
+    }
+
+  }
+
+  static String getLastMessageTime({required BuildContext context, required String time}) {
+    final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    final DateTime now = DateTime.now();
+    if (now.day == sent.day &&
+        now.month == sent.month &&
+        now.year == sent.year) {
+      return TimeOfDay.fromDateTime(sent).format(context);
+    }
+    return '${sent.day} ${_getMonth(sent)}';
+  }
+  //Get month name from month no. index
+  static String _getMonth(DateTime date) {
+    switch (date.month) {
+      case 1:
+        return 'Jan';
+      case 2:
+        return 'Feb';
+      case 3:
+        return 'Mar';
+      case 4:
+        return 'Apr';
+      case 5:
+        return 'May';
+      case 6:
+        return 'Jun';
+      case 7:
+        return 'Jul';
+      case 8:
+        return 'Aug';
+      case 9:
+        return 'Sep';
+      case 10:
+        return 'Oct';
+      case 11:
+        return 'Nov';
+      case 12:
+        return 'Dec';
+    }
+    return 'N/A';
+  }
+
+  //Get Reivews
+  static Future SendNeedReviewFromBoth(sellerId,purchaserId)async{
+    await usersRef.doc(sellerId).collection("Reviews").doc(purchaserId).set({"reviews":purchaserId});
+    await usersRef.doc(purchaserId).collection("Reviews").doc(sellerId).set({"reviews":sellerId});
+  }
+
+  static Future NeedReviewFromPurchaser(sellerId,purchaserId)async{
+    // await usersRef.doc(sellerId).collection("Reviews").doc(purchaserId).set({"reviews":purchaserId});
+    await usersRef.doc(purchaserId).collection("Reviews").doc(sellerId).set({"reviews":sellerId});
+  }
+  static Future GetPendingReivews()async{
+    ReviewsNeeded.clear();
+    await usersRef.doc(FirebaseAuth.instance.currentUser!.uid).collection("Reviews").get().then((value)async{
+      value.docs.forEach((element) async{
+        UserModel userModel = await DatabaseHelper().GetSpecificUser(element.id);
+        print(userModel.image.toString());
+        ReviewsNeeded.add(userModel);
+      });
+    });
+    ReviewsNeeded;
+  }
+
+  static  GetUpdatedMessageAlert()async{
+    
+    for(var i in chatted){
+      await chatsRef.doc(i.ChatId).collection("message").snapshots().listen((event) {
+        event.docs.forEach((element) {
+          print(element.id.toString());
+        });
+
+      });
+      
+    }
+  }
+
+  static Future<void> updateMessageReadStatus(ChatId) async {
+    print("CALLLED");
+    firestore.collection("Chats/${ChatId}/message/").snapshots().listen((value) {
+          value.docs.forEach((element) {
+            element.data().updateAll((key, value) => {"read":"Yes"});
+          });
+
+    });
+  }
 
 
 

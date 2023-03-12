@@ -29,20 +29,13 @@ class _SignUpSectionTwoState extends State<SignUpSectionTwo> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       //backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.white
-                // image: DecorationImage(
-                //   fit: BoxFit.cover,
-                //   // colorFilter: new ColorFilter.mode(
-                //   //     Colors.black.withOpacity(0.1), BlendMode.dstATop),
-                //   image: new AssetImage("assets/images/blacknwhite_bg.jpg"),
-                // )
-            ),
+      body: SingleChildScrollView(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white
           ),
-          Column(children: [
+          child: Column(
+            children: [
             Align(
               alignment: Alignment.center,
               child: Text(
@@ -182,7 +175,7 @@ class _SignUpSectionTwoState extends State<SignUpSectionTwo> {
                   UserModel userModel=UserModel();
                   if(_groupValue!=null){
                     widget.userModel.type=_groupValue;
-                    widget.userModel.rating="N/A";
+                    widget.userModel.rating=[];
                     // EasyLoading.show(status: 'loading...');
                     // Get.to(Verify(widget.userModel));
                     Get.to(PhoneAuthScreen(widget.userModel));
@@ -222,14 +215,16 @@ class _SignUpSectionTwoState extends State<SignUpSectionTwo> {
               ).marginOnly(left: 12, right: 12, top: 30),
             ),
             InkWell(
+
               onTap: () async{
+                print(widget.userModel.CountryCode.toString());
                 Get.focusScope!.unfocus();
                 if (formKey.currentState != null &&
                     formKey.currentState!.validate()){
                   UserModel userModel=UserModel();
                   if(_groupValue!=null){
                     widget.userModel.type=_groupValue;
-                    widget.userModel.rating="N/A";
+                    widget.userModel.rating=[];
                     widget.userModel.idVerification="No";
                     EasyLoading.show(status: 'loading...');
                      userModel=await  DatabaseHelper().SignUp(widget.userModel);
@@ -238,7 +233,7 @@ class _SignUpSectionTwoState extends State<SignUpSectionTwo> {
                        print("Sign up failed");
                      }else{
                        EasyLoading.dismiss();
-                       Get.offAll(HomeScreen(userModel),
+                       Get.offAll(HomeScreen(userModel,0),
                            transition: Transition.leftToRight);
                      }
                   }else{
@@ -267,8 +262,8 @@ class _SignUpSectionTwoState extends State<SignUpSectionTwo> {
                 ),
               ).marginOnly(left: 12, right: 12, top: 20),
             ),
-          ],)
-        ],
+          ],),
+        ),
       ),
 
     );

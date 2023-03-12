@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -14,12 +15,15 @@ import 'package:watchminter/Models/WatchModel.dart';
 import 'package:watchminter/Screens/Home/MessageScreen.dart';
 import 'package:watchminter/Screens/WatchSellScreen.dart';
 
+import '../../Constants/my_date_utils.dart';
 import '../EditWatchDetails.dart';
+import 'WatchImageViewScreen.dart';
 
 class WatchDetailScreen extends StatefulWidget {
   final watchId;
+  UserModel userModel;
 
-  WatchDetailScreen(this.watchId, {Key? key}) : super(key: key);
+  WatchDetailScreen(this.watchId,this.userModel, {Key? key}) : super(key: key);
 
   @override
   State<WatchDetailScreen> createState() => _WatchDetailScreenState();
@@ -30,6 +34,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
   WatchModel watchModel = WatchModel();
   List images = [];
   var history = "";
+
   var buyer_elevation = 0.0;
   final formKey = GlobalKey<FormState>();
   var focusNodeBuyerId = FocusNode();
@@ -39,6 +44,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
   UserModel ReceiverUser = UserModel();
   final ImagePicker imagePicker = ImagePicker();
   List<XFile>? imageFileList = [];
+  var location;
 
   @override
   void initState() {
@@ -56,16 +62,29 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
     getWatchDetails();
 
   }
-  getCurrentUser()async{
-    currentUser= await DatabaseHelper().GetSpecificUser(FirebaseAuth.instance.currentUser!.uid);
-  }
+  // gettime()async{
+  //       time = MyDatUtil.getFormatedDateYear(
+  //           context: context, time: watchModel.createdAt.toString());
+  //
+  //       setState(() {
+  //         time;
+  //       });
+  //
+  // }
 
   getReceiverUser()async{
     print(watchModel.ownerId);
     ReceiverUser= await DatabaseHelper().GetSpecificUser(watchModel.ownerId);
+    setState(() {
+      location = ReceiverUser.house +" "+ReceiverUser.street+" "+ReceiverUser.town+" "+ReceiverUser.province+" "+ReceiverUser.zip+" "+ReceiverUser.country;
+    });
     EasyLoading.dismiss();
 
   }
+  getCurrentUser()async{
+    currentUser= await DatabaseHelper().GetSpecificUser(FirebaseAuth.instance.currentUser!.uid);
+  }
+
   getWatchDetails() async {
     EasyLoading.show(status: "Loading....");
     watchModel = await DatabaseHelper().GetWatch(widget.watchId);
@@ -77,10 +96,11 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
       history = history +
           user.name +
           " on " +
-          watchModel.history[i].time.toString() +
+           MyDatUtil.getFormatedDateYear(time: watchModel.history[i].time.toString()) +
+          // watchModel.createdAt.toString() +
           ".";
       if (i + 1 < watchModel.history.length) {
-        history = history + "Then it was passed to ";
+        history = history + "Then it was bought by ";
       }
     }
     if(FirebaseAuth.instance.currentUser!.uid!=watchModel.ownerId){
@@ -92,6 +112,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
       watchModel;
       images = watchModel.images;
       history;
+      EasyLoading.dismiss();
     });
     getCurrentUser();
     getReceiverUser();
@@ -198,18 +219,81 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                   builder: (BuildContext context) {
                                     return InkWell(
                                       onTap: (){
+                                        print("clicked");
+                                        // Navigator.push(context,
+                                            // CupertinoPageRoute(
+                                            //   fullscreenDialog: true,
+                                            //   builder: (context) =>WatchImageViewScreen(images),));
+
                                         Get.defaultDialog(
                                           barrierDismissible: false,
+                                          title: "",
                                           backgroundColor: Colors.transparent,
                                           content: Stack(
                                             clipBehavior: Clip.none,
                                             children: [
-                                              Container(width: MediaQuery.of(context).size.width,
+                                              /////////////////////////////////////////////////
+
+                                              Container(
+                                                height: 350,
+                                                width: MediaQuery.of(context).size.width,
+                                                
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius: BorderRadius.circular(15)
+                                                  
+                                                ),
+                                              ),
+
+                                              Container(
+                                                width: MediaQuery.of(context).size.width*0.8,
                                                 color: Colors.transparent,
-                                                child: Image.network((i),fit: BoxFit.contain,),),
+                                                padding: EdgeInsets.symmetric(horizontal: 15),
+                                                alignment: Alignment.center,
+                                                child: CarouselSlider(
+                                                  options: CarouselOptions(
+                                                    height: 350,
+                                                    enableInfiniteScroll: false,
+                                                    // viewportFraction: 1.1,
+
+                                                  ),
+                                                  items: watchModel.images != null
+                                                      ?  images.map((i) {
+                                                    return Builder(
+                                                      builder: (BuildContext context) {
+                                                        return Container(
+                                                          margin: EdgeInsets.symmetric(horizontal: 5,vertical: 15),
+                                                            width: MediaQuery.of(context).size.width,
+                                                            decoration: BoxDecoration(color: Colors.transparent),
+                                                            child: Image.network(i,height: 300,width: MediaQuery.of(context).size.width,fit: BoxFit.cover,));
+                                                      },
+                                                    );
+                                                  }).toList()
+                                                      : [1].map((i) {
+                                                    return Builder(
+                                                      builder: (BuildContext context) {
+                                                        return Container(
+                                                            width:
+                                                            MediaQuery.of(context).size.width,
+                                                            margin: EdgeInsets.symmetric(
+                                                                horizontal: 5.0),
+                                                            decoration:
+                                                            BoxDecoration(color: Colors.white),
+                                                            child: Image.asset(
+                                                                "assets/images/watch.png")
+                                                          // child: Image.asset(
+                                                          //   "assets/images/watch.png",
+                                                          // )
+                                                        );
+                                                      },
+                                                    );
+                                                  }).toList(),
+                                                ),),
+
+                                              ////////////////////////////////////////////////
                                               Positioned(
                                                 right: 5,
-                                                top: 5,
+                                                top: 0,
                                                 child: InkWell(
                                                   onTap: (){
                                                     Navigator.pop(context);
@@ -439,7 +523,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                     )),
                                     Expanded(
                                         child: Text(
-                                      watchModel.location ?? "",
+                                      location ?? "",
                                       style: TextStyle(
                                           color: AppColors.background,
                                           fontFamily: "Gotham"),
@@ -487,7 +571,8 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                     )),
                                     Expanded(
                                         child: Text(
-                                      watchModel.createdAt ?? "",
+                                          watchModel.createdAt.toString()??"",
+                                      // watchModel.createdAt.toString() ?? "",
                                       style: TextStyle(
                                           color: AppColors.background,
                                           fontFamily: "Gotham"),
@@ -503,7 +588,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                                     )),
                                     Expanded(
                                         child: Text(
-                                      "4.8",
+                                      widget.userModel.rating.toStringAsFixed(2),
                                       style: TextStyle(
                                           color: AppColors.background,
                                           fontFamily: "Gotham"),
@@ -630,7 +715,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
 
                           InkWell(
                             onTap: () {
-                              Get.to(WatchSellScreen(watchModel));
+                              Get.to(WatchSellScreen(watchModel,ReceiverUser));
                             },
                             child: Container(
                                 alignment: Alignment.center,
@@ -656,6 +741,7 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                             if(imageFileList!.isNotEmpty){
                               await DatabaseHelper().EditWatch(watchModel.displayImage,watchModel,imageFileList);
                             }else{
+                              watchModel.escrow=true;
                               await DatabaseHelper().UpdateWatch(watchModel);
                             }
 
@@ -737,8 +823,13 @@ class _WatchDetailScreenState extends State<WatchDetailScreen> {
                           elevation: 20,
                           borderRadius: BorderRadius.circular(50),
                           child: InkWell(
-                            onTap: () {
-                              Get.to(MessageScreen(currentUser!, ReceiverUser));
+                            onTap: () async{
+                              // Get.to(MessageScreen(currentUser!, ReceiverUser));
+                              EasyLoading.show();
+                              await DatabaseHelper.LoadSpecificChat(ReceiverUser);
+                              EasyLoading.dismiss();
+                              // Get.to(()=>);
+
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width,

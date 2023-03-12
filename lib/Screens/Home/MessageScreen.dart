@@ -1,14 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Constants/AppColors.dart';
 import 'package:watchminter/Global/firebase_ref.dart';
 import 'package:watchminter/Models/UserModel.dart';
+import 'package:watchminter/Screens/Home/HomeScreen.dart';
 import 'package:watchminter/Screens/Home/OtherUserProfileScreen.dart';
 import 'package:watchminter/Screens/ViewProfile.dart';
 
 import '../../ExternalWidgets/messageCard.dart';
 import '../../Models/Message.dart';
+import 'SubScreens/Chat.dart';
 
 class MessageScreen extends StatefulWidget {
   UserModel receiverModel;
@@ -27,30 +30,22 @@ class _MessageScreenState extends State<MessageScreen> {
   final _textController = new TextEditingController();
   var text;
 
-  _scrollListener() {
-    // controller.jumpTo(controller.position.maxScrollExtent);
-    if (controller.offset >= controller.position.maxScrollExtent &&
-        !controller.position.outOfRange) {
-      print('bottom');
-    }
-    if (controller.offset <= controller.position.minScrollExtent &&
-        !controller.position.outOfRange) {
-      print('top');
-    }
-  }
   @override
   void initState() {
     super.initState();
+    setState(() {
+
+    });
     // controller.addListener(_scrollListener);
   }
   @override
   Widget build(BuildContext context) {
-
    return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: WillPopScope(
         //If emoji are shown and back button is been pressed hide does emoji's
         onWillPop: () {
+          Get.offAll(HomeScreen(widget.senderModel,2));
             return Future.value(true);
         },
         child: Scaffold(
@@ -79,10 +74,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     ),
               Expanded(
                 child: StreamBuilder(
-                  stream: chatsRef
-                  .where("receiverId", isEqualTo: widget.receiverModel.id)
-                  .orderBy('time', descending: true)
-                  .snapshots(),
+                  stream: chatsRef.orderBy('time', descending: true).snapshots(),
                   builder: (context,AsyncSnapshot snapshot) {
                     switch (snapshot.connectionState) {
                     //if is data is loading
@@ -104,7 +96,14 @@ class _MessageScreenState extends State<MessageScreen> {
                               physics: BouncingScrollPhysics(),
                               padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * .01),
                               itemBuilder: (context, index) {
-                                return MessageCard(_list[index],);
+                                if(_list[index]["senderId"]==FirebaseAuth.instance.currentUser!.uid&&_list[index]["receiverId"]==widget.receiverModel.id
+                                    ||
+                                    _list[index]["receiverId"]==FirebaseAuth.instance.currentUser!.uid&&_list[index]["senderId"]==widget.receiverModel.id){
+                                  print(widget.receiverModel.name);
+                                  print("message");
+                                  print(_list[index]["message"]);
+                                  return MessageCard(_list[index],widget.receiverModel);
+                                }
                               });
                         } else {
                           return Center(

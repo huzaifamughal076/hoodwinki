@@ -21,6 +21,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   var name,firstName,lastName, email, password, confirmPassword;
   var houseNumber, street, town, province, zip, country;
+  var CountryCode;
   var emailValid = RegExp(
       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
 
@@ -544,12 +545,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             onTap: (){
                               showCountryPicker(
                                 context: context,
+                                countryListTheme: CountryListThemeData(
+                                  bottomSheetHeight: 600,
+                                  backgroundColor: AppColors.white,
+
+                                  inputDecoration: InputDecoration(
+                                    labelText: 'Search',
+                                    hintText: 'Start typing to search',
+                                    suffixIcon: const Icon(Icons.search),
+                                    suffixIconColor: AppColors.orange,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: Colors.black87
+                                      )
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.orange,
+                                      )
+                                    )
+                                  )
+                                ),
+
+
                                 showPhoneCode: true, // optional. Shows phone code before the country name.
                                 onSelect: (Country country) {
                                   print('Select country: ${country.displayName}');
                                   setState(() {
                                     setState(() {
                                       countryController.text =country.displayNameNoCountryCode;
+                                      CountryCode= country.phoneCode;
+                                      print(CountryCode);
                                       country;
                                     });
                                   });
@@ -604,7 +630,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         if(dob!=null&&dob!=""){
                           name = firstName.toString()+" "+lastName.toString();
                           print(name.toString());
-                          var userModel=UserModel(id: password,name: name,email: email,dob: dob,house: houseNumber,street: street,town: town,province: province,zip: zip,country: country);
+                          var userModel=UserModel(id: password,name: name,email: email,dob: dob,house: houseNumber,street: street,town: town,province: province,zip: zip,country: country,CountryCode: CountryCode);
                           if (userModel == null) {
 
                           } else {

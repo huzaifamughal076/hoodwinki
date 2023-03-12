@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 
 import '../Constants/my_date_utils.dart';
 import '../Models/Message.dart';
+import '../Models/UserModel.dart';
 
 
 class MessageCard extends StatefulWidget {
   final message;
-   MessageCard(this.message,{Key? key}) : super(key: key);
+  UserModel receiverModel;
+   MessageCard(this.message,this.receiverModel,{Key? key}) : super(key: key);
 
   @override
   State<MessageCard> createState() => _MessageCardState();
@@ -24,7 +26,9 @@ class _MessageCardState extends State<MessageCard> {
 
   //sender or another user
   Widget _blueMessage() {
-      return Padding(
+    print("RecevierId"+widget.receiverModel.id);
+    print("DatabaseId ID"+widget.message["receiverId"]);
+      return (widget.receiverModel.id!=widget.message["receiverId"])?Padding(
         padding: const EdgeInsets.only(top: 8, bottom: 8),
         child: Align(
           child: SizedBox(
@@ -56,7 +60,7 @@ class _MessageCardState extends State<MessageCard> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * .04),
+                      padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * .04),
                       child: Text(
                         MyDatUtil.getFormattedTime(
                             context: context, time: widget.message['time'].toString()),
@@ -69,7 +73,7 @@ class _MessageCardState extends State<MessageCard> {
             ),
           ),
         ),
-      );
+      ):const SizedBox(height: 0,);
   }
 
   //our or user message

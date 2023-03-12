@@ -1,17 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Screens/Home/SubScreens/Collections.dart';
-
 import '../../../Constants/AppColors.dart';
 import '../../../Global/firebase_ref.dart';
 import '../../../Models/UserModel.dart';
 import '../../../Models/WatchModel.dart';
 import '../UserDetailTiles.dart';
-
-
 class Search extends StatefulWidget {
   UserModel _userModel;
   Search(this._userModel,{Key? key}) : super(key: key);
@@ -19,7 +15,6 @@ class Search extends StatefulWidget {
   @override
   State<Search> createState() => _SearchState();
 }
-
 class _SearchState extends State<Search> with WidgetsBindingObserver {
 //For Storing all Users
   var _usersList = [];
@@ -27,12 +22,8 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
 
   var _watchList = [];
   var _searchWatchList = [];
-
-
-
-  //FOr Storing search status
+  //For Storing search status
   bool _isSearching = false;
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -182,7 +173,6 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
-
                     Container(
                         alignment: Alignment.centerLeft,
                         margin: EdgeInsets.symmetric(horizontal: 15),
@@ -197,17 +187,12 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
                           case ConnectionState.waiting:
                           case ConnectionState.none:
                             return Center(child: CircularProgressIndicator());
-
                         //if data is loaded
                           case ConnectionState.active:
                           case ConnectionState.done:
                             _watchList.clear();
-
                             final data = snapshot.data?.docs;
-                            print(data.length);
-
                             _watchList = data??[];
-
                             if (_searchWatchList.isNotEmpty) {
                               return GridView.builder(
                                   gridDelegate:
@@ -218,7 +203,7 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
                                   primary: true,
                                   itemCount:  _searchWatchList.length,
                                   itemBuilder: (context, index) {
-                                    return CollectionTiles(_searchWatchList[index]);
+                                    return CollectionTiles(_searchWatchList[index],widget._userModel);
                                   });
                             } else {
                               return Center(
@@ -245,12 +230,8 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
                           case ConnectionState.active:
                           case ConnectionState.done:
                             _usersList.clear();
-
                             final data = snapshot.data?.docs;
-                            print(data.length);
-
                             _usersList = data??[];
-
                             if (_searchUserList.isNotEmpty) {
                               return GridView.builder(
                                   gridDelegate:
@@ -261,7 +242,7 @@ class _SearchState extends State<Search> with WidgetsBindingObserver {
                                   primary: true,
                                   itemCount:  _searchUserList.length,
                                   itemBuilder: (context, index) {
-                                    return UserDetailTiles(_searchUserList[index]);
+                                    return UserDetailTiles(_searchUserList[index],widget._userModel);
                                   });
                             } else {
                               return Center(

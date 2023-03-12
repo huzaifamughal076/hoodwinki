@@ -128,7 +128,28 @@ class _MyVerifyState extends State<MyVerify> {
                            var check= (await usersRef.doc(widget.userModel.id).get()).exists;
                            if(check==true){
                              widget.userModel.idVerification = "Yes";
+                             double sum=0.0;
+                             var rating;
+                             await usersRef.doc(widget.userModel.id).get().then((val) async {
+                               List pointlist = List.from(val.data()!['Rating']);
+                               if(pointlist.isNotEmpty || pointlist.length!=0){
+                                 for(var i in pointlist){
+                                   print(i);
+                                   sum += i;
+                                 }
+                                 print("SUM: "+sum.toString());
+                                 rating = sum/pointlist.length;
+                                 print("Rating is: "+rating.toString());
+                               }
+                               else{
+                                 rating = 0.0;
+                               }
+
+                               widget.userModel.rating = pointlist;
+                             });
                             await usersRef.doc(widget.userModel.id).update(widget.userModel.toMap());
+                            widget.userModel.rating = rating;
+
                             // Get.offAll(()=>HomeScreen(widget.userModel));
                              Get.offAll(()=> LoginScreen());
                              Fluttertoast.showToast(msg: "Please Re-Login for Confirmations");

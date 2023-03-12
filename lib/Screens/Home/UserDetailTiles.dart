@@ -6,12 +6,14 @@ import 'package:watchminter/Screens/Home/OtherUserProfileScreen.dart';
 import 'package:watchminter/Screens/ViewProfile.dart';
 
 import '../../Constants/AppColors.dart';
+import '../../Models/UserModel.dart';
 
 
 
 class UserDetailTiles extends StatefulWidget {
   final data;
-  const UserDetailTiles(this.data,{Key? key}) : super(key: key);
+  UserModel userModel;
+  UserDetailTiles(this.data,this.userModel,{Key? key}) : super(key: key);
 
   @override
   State<UserDetailTiles> createState() => _UserDetailTilesState();
@@ -28,7 +30,7 @@ class _UserDetailTilesState extends State<UserDetailTiles> {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
-          Get.to(()=>OtherUserProfileScreen(widget.data));
+          Get.to(()=>OtherUserProfileScreen(widget.data,widget.userModel));
         },
         child: Container(
           width: 200,

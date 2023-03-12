@@ -56,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
        Map<String,dynamic> userdata= jsonDecode(prefs.getString("usersModel")!);
        UserModel userModel =UserModel.fromMap(userdata);
        await Firebase.initializeApp();
-       Get.offAll(HomeScreen(userModel),transition: Transition.leftToRight);
+       Get.offAll(HomeScreen(userModel,0),transition: Transition.leftToRight);
      }
      else{
        print("User Absent");

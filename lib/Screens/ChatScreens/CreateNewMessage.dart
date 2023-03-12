@@ -1,11 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Constants/AppColors.dart';
 import 'package:watchminter/Database/DatabaseHelper.dart';
 import 'package:watchminter/Global/firebase_ref.dart';
 import 'package:watchminter/Models/UserModel.dart';
+import 'package:watchminter/Screens/Home/HomeScreen.dart';
 
 import '../../Models/Message.dart';
 
@@ -116,7 +119,6 @@ class _CreateNewMessageState extends State<CreateNewMessage> {
                           snackPosition: SnackPosition.BOTTOM,
                           backgroundColor: AppColors.orange);
                     } else {
-                      EasyLoading.show(status: "Sending");
                       // await chatsRef.doc().set({
                       //   'message': message.text.toString(),
                       //   'time': DateTime.now().millisecondsSinceEpoch,
@@ -124,16 +126,23 @@ class _CreateNewMessageState extends State<CreateNewMessage> {
                       //   'receiverId': recipientId,
                       //   'username': widget.userModel.name
                       // });
-                      Message messages=Message(
-                        message: message.text.toString(),
-                        time: DateTime.now().millisecondsSinceEpoch.toString(),
-                        senderId: widget.userModel.id,
-                        receiverId: recipientId,
-                        username: widget.userModel.name,
-                      );
-                      await DatabaseHelper.sendMessage(recipientId, messages);
-                      EasyLoading.dismiss();
-                      Get.back();
+                      if(FirebaseAuth.instance.currentUser!.uid!=recipientId){
+                        EasyLoading.show(status: "Sending");
+                        Message messages=Message(
+                          read: "No",
+                          message: message.text.toString(),
+                          time: DateTime.now().millisecondsSinceEpoch,
+                          senderId: widget.userModel.id,
+                          receiverId: recipientId,
+                          username: widget.userModel.name,
+                        );
+                        // await DatabaseHelper.sendMessage(recipientId, messages);
+                        await DatabaseHelper.sendNewMessage(recipientId,message,widget.userModel);
+                        EasyLoading.dismiss();
+                        Get.offAll(HomeScreen(widget.userModel, 0));
+                      }else{
+                        Fluttertoast.showToast(msg: "User Can't Send the Message to it self");
+                      }
                     }
                   } else {
                     Get.snackbar("Error", "Message field is empty",

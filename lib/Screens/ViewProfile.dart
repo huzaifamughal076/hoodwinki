@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:watchminter/Constants/AppColors.dart';
 import 'package:watchminter/Database/DatabaseHelper.dart';
@@ -22,6 +24,7 @@ class ViewProfile extends StatefulWidget {
 
 class _ViewProfileState extends State<ViewProfile> {
   UserModel? currentUser;
+  var rate;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,31 +45,36 @@ class _ViewProfileState extends State<ViewProfile> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  height: 200,
+                  height: 150,
                   child: Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12.0),
-                        child: Image.asset(
-                          "assets/images/cover.png",
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height,
-                        ).marginOnly(bottom: 40),
-                      ),
+                      // ClipRRect(
+                      //   borderRadius: BorderRadius.circular(12.0),
+                      //   child: Image.asset(
+                      //     "assets/images/cover.png",
+                      //     fit: BoxFit.cover,
+                      //     alignment: Alignment.center,
+                      //     width: MediaQuery.of(context).size.width,
+                      //     height: MediaQuery.of(context).size.height,
+                      //   ).marginOnly(bottom: 40),
+                      // ),
                       Align(
                         alignment: Alignment.bottomCenter,
-                        child: ClipRRect(
-                          borderRadius:
-                          BorderRadius.circular(MediaQuery.of(context).size.height * .2),
-                          child: CachedNetworkImage(
-                            width: MediaQuery.of(context).size.height * .15,
-                            height: MediaQuery.of(context).size.height * .15,
-                            fit: BoxFit.cover,
-                            imageUrl: widget.userModel.image??"assets/images/watch.png",
-                            placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
-                            errorWidget: (context, url, error) =>Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"))
+                        child: Material(
+                          shape: const CircleBorder(),
+                          color: Colors.transparent,
+                          elevation: 10,
+                          child: ClipRRect(
+                            borderRadius:
+                            BorderRadius.circular(MediaQuery.of(context).size.height * .2),
+                            child: CachedNetworkImage(
+                              width: MediaQuery.of(context).size.height * .15,
+                              height: MediaQuery.of(context).size.height * .15,
+                              fit: BoxFit.cover,
+                              imageUrl: widget.userModel.image??"assets/images/watch.png",
+                              placeholder: (context, url) =>Image.asset("assets/images/watch.png"),
+                              errorWidget: (context, url, error) =>Container(color: AppColors.orange,child: Image.asset("assets/images/watch.png"))
+                            ),
                           ),
                         ),
                       )
@@ -81,6 +89,23 @@ class _ViewProfileState extends State<ViewProfile> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold),
                 ).marginOnly(top: 12),
+
+                if(FirebaseAuth.instance.currentUser!.uid!=widget.userModel.id)
+                InkWell(
+                  onTap: ()async{
+                    await Clipboard.setData(ClipboardData(text: widget.userModel.id));
+                    Get.snackbar("Copy Successfull", "Id copied to clipboard",
+                        colorText: AppColors.white,
+                        icon: Icon(Icons.error_outline, color: Colors.white),
+                        snackPosition: SnackPosition.TOP,
+                        backgroundColor: AppColors.orange);
+                  },
+                  child: Text(
+                    widget.userModel.id,
+                    style: TextStyle(color: AppColors.orange, letterSpacing: 2),
+                  ).marginOnly(top: 10),
+                ),
+
                 if(FirebaseAuth.instance.currentUser!.uid!=widget.userModel.id)
                 InkWell(
                   onTap: (){
@@ -135,7 +160,7 @@ class _ViewProfileState extends State<ViewProfile> {
                               primary: true,
                               itemCount:  snapshot.data.docs.length,
                               itemBuilder: (context, index) {
-                                return  WatchCollectionTiles(snapshot.data.docs[index]);
+                                return  WatchCollectionTiles(snapshot.data.docs[index],widget.userModel);
                               });
                         }
                       }),
@@ -230,7 +255,8 @@ class _ViewProfileState extends State<ViewProfile> {
                             )),
                             Expanded(
                                 child: Text(
-                              widget.userModel.rating,
+                              // widget.userModel.rating,
+                              widget.userModel.rating.toStringAsFixed(2)??"0.0",
                               style: TextStyle(
                                   color: AppColors.background,
                                   fontFamily: "Gotham"),
@@ -252,6 +278,21 @@ class _ViewProfileState extends State<ViewProfile> {
                                       fontFamily: "Gotham"),
                                 ))
                           ]).marginOnly(left: 12, right: 10, top: 5, bottom: 10),
+                          Row(children: [
+                            Expanded(
+                                child: Text(
+                                  "About",
+                                  style: TextStyle(
+                                      color: Colors.grey, fontFamily: "Gotham"),
+                                )),
+                            Expanded(
+                                child: Text(
+                                  widget.userModel.about,
+                                  style: TextStyle(
+                                      color: AppColors.background,
+                                      fontFamily: "Gotham"),
+                                ))
+                          ]).marginOnly(left: 12, right: 10,bottom: 5),
                         ],
                       ),
                     )).marginOnly(left: 12, right: 12, top: 10),
@@ -267,10 +308,27 @@ class _ViewProfileState extends State<ViewProfile> {
                   ).marginOnly(left: 12, top: 12),
                 ),
 
-                Align(
+                (widget.userModel.rating==0.0)?Align(
                   alignment: Alignment.center,
                   child: Text("You have no reviews yet"),
                 ).marginOnly(top: 10)
+                    :RatingBar.builder(
+                      initialRating: widget.userModel.rating??0.0,
+                      minRating: 1,
+                      direction: Axis.horizontal,
+                      allowHalfRating: true,
+                      ignoreGestures: true,
+                      itemCount: 5,
+                      itemSize: 25,
+                      itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                      itemBuilder: (context, _) => Icon(
+                      Icons.star,
+                      color: AppColors.orange,
+                      ),
+                      onRatingUpdate: (rating) {
+                      print(rating);
+                      },
+                      )
 
               ],
             ),
@@ -281,8 +339,6 @@ class _ViewProfileState extends State<ViewProfile> {
   }
 
   String getTime(var time) {
-
-
     DateTime now = DateTime.parse(time);
      String formattedDate = DateFormat('yyyy').format(now);
    // time= DateTime.tryParse(time);
@@ -293,14 +349,22 @@ class _ViewProfileState extends State<ViewProfile> {
   getCurrentUser()async{
     EasyLoading.show();
     currentUser= await DatabaseHelper().GetSpecificUser(FirebaseAuth.instance.currentUser!.uid);
+    print(currentUser?.rating.toString());
+    setState(() {});
     EasyLoading.dismiss();
   }
 
   @override
   void initState() {
     getCurrentUser();
+    dely();
     EasyLoading.dismiss();
   }
+  dely()async{
+    rate =  await DatabaseHelper.rating(FirebaseAuth.instance.currentUser!.uid);
+    print(rate);
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -311,7 +375,8 @@ class _ViewProfileState extends State<ViewProfile> {
 
 class WatchCollectionTiles extends StatefulWidget {
   final data;
-  WatchCollectionTiles(this.data,{Key? key}) : super(key: key);
+  UserModel userModel;
+  WatchCollectionTiles(this.data,this.userModel,{Key? key}) : super(key: key);
 
   @override
   State<WatchCollectionTiles> createState() => _WatchCollectionTilesState();
@@ -322,7 +387,7 @@ class _WatchCollectionTilesState extends State<WatchCollectionTiles> {
   Widget build(BuildContext context) {
     return  InkWell(
       onTap: (){
-        Get.to(WatchDetailScreen(widget.data['watchId']));
+        Get.to(WatchDetailScreen(widget.data['watchId'],widget.userModel));
       },
       child: Material(
             elevation: 10,

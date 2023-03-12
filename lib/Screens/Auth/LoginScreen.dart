@@ -260,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   print(data);
                                   await prefs.setString("usersModel", data);
                                   await prefs.setBool("loggedIn", true);
-                                  Get.offAll(HomeScreen(userModel),
+                                  Get.offAll(HomeScreen(userModel,0),
                                     transition: Transition.leftToRight);
 
                                 }

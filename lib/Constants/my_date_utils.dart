@@ -22,6 +22,13 @@ class MyDatUtil {
 
   }
 
+  static String getFormatedDateYear(
+      {required String time}){
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(int.parse(time));
+    final dateTimeString = DateFormat("dd-MMM-yyyy").format(dateTime);
+    return dateTimeString;
+  }
+
   static String getLastMessageTime(
       {required BuildContext context, required String time}) {
     final DateTime sent = DateTime.fromMillisecondsSinceEpoch(int.parse(time));

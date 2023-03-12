@@ -1,14 +1,25 @@
+import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:rating_dialog/rating_dialog.dart';
 import 'package:watchminter/Database/DatabaseHelper.dart';
+import 'package:watchminter/Global/firebase_ref.dart';
+import 'package:watchminter/Screens/Home/TermsAndConditions.dart';
 
 import '../../Constants/AppColors.dart';
+import '../Models/UserModel.dart';
 import '../Models/WatchModel.dart';
 
 class WatchSellScreen extends StatefulWidget {
   WatchModel watchModel;
-  WatchSellScreen(this.watchModel,{Key? key}) : super(key: key);
+  UserModel usermodel;
+  WatchSellScreen(this.watchModel,this.usermodel,{Key? key}) : super(key: key);
 
   @override
   State<WatchSellScreen> createState() => _WatchSellScreenState();
@@ -19,8 +30,6 @@ class _WatchSellScreenState extends State<WatchSellScreen> {
   var _formKey = GlobalKey<FormState>();
 
   var buyerId;
-  // var emailValid = RegExp(
-  //     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
 
   @override
   Widget build(BuildContext context) {
@@ -123,29 +132,102 @@ class _WatchSellScreenState extends State<WatchSellScreen> {
                          Get.focusScope!.unfocus();
                          if (_formKey.currentState != null &&
                              _formKey.currentState!.validate()){
-                           EasyLoading.show(status: "Loading");
-                           widget.watchModel.escrow=true;
-                           bool result= await DatabaseHelper().SellWatch(widget.watchModel,buyerId);
-                           EasyLoading.dismiss();
-                           if(result==true){
-                             Get.snackbar("Successful", "Watch sold successfully",
-                                 colorText: AppColors.white,
-                                 icon: Icon(Icons.error_outline, color: Colors.white),
-                                 snackPosition: SnackPosition.TOP,
-                                 backgroundColor: AppColors.orange);
-                                 Navigator.pop(context);
-                                 Navigator.pop(context);
-                             Get.back();
 
-                           }else{
-                             Get.snackbar("Error", "Buyer id was not found",
-                                 colorText: AppColors.white,
-                                 icon: Icon(Icons.error_outline, color: Colors.white),
-                                 snackPosition: SnackPosition.TOP,
-                                 backgroundColor: AppColors.orange);
-                           }
-                           //buyerId
-                           //history
+                           Get.defaultDialog(
+                             title: "Alert",
+                             middleText: "Are you sure you want to transfer this watch passport. Once it has been sent, it will move out of your collection permanently",
+                             actions: [
+                               SizedBox(width: 100,),
+                              ElevatedButton(
+                                  onPressed: (){
+                                    Navigator.pop(context);
+                              }, child: Text("No"),
+                              style: ElevatedButton.styleFrom(elevation: 0,backgroundColor: Colors.grey)),
+                              ElevatedButton(onPressed: () async {
+                                Navigator.pop(context);
+                                EasyLoading.show(status: "Loading");
+                                widget.watchModel.escrow=true;
+                                // bool result = true;
+                                /////////////Converting the Date time into milliseconds
+                                String dateString = widget.watchModel.createdAt;
+                                String format = 'dd-MMM-yyyy';
+
+                                // Create a DateFormat object to parse the date string
+                                DateFormat formatter = DateFormat(format);
+
+                                // Parse the date string into a DateTime object
+                                DateTime date = formatter.parse(dateString);
+
+                                // Get the milliseconds since Unix epoch
+                                int millisecondsSinceEpoch = date.millisecondsSinceEpoch;
+                                widget.watchModel.createdAt = millisecondsSinceEpoch;
+
+                                print(millisecondsSinceEpoch); // Output: 1688409600000
+
+
+                                bool result= await DatabaseHelper().SellWatch(widget.watchModel,buyerId);
+                                EasyLoading.dismiss();
+                                if(result==true){
+                                  UserModel BuyerModel = UserModel();
+                                  BuyerModel = await DatabaseHelper().GetSpecificUser(buyerId);
+                                  Get.snackbar("Successful", "Watch sold successfully",
+                                      colorText: AppColors.white,
+                                      icon: Icon(Icons.error_outline, color: Colors.white),
+                                      snackPosition: SnackPosition.TOP,
+                                      backgroundColor: AppColors.orange);
+                                  Navigator.pop(context);
+                                  Navigator.pop(context);
+                                  //////////////////////////////////////////////////
+                                  showDialog(context: context, builder: (context) {
+                                    return RatingDialog(
+                                      initialRating: 2,
+                                      starColor: AppColors.orange,
+                                      image: Image.asset("assets/images/hood.png",height: 50,),
+                                      message: const Text("Please rate the client",textAlign: TextAlign.center,style: TextStyle(color: AppColors.grey,fontSize: 12),),
+                                      starSize: 30.0,
+                                      title: const Text("Rating",textAlign: TextAlign.center,style: TextStyle(color: AppColors.orange),),
+                                      submitButtonText: 'Submit',
+                                      showCloseButton: true,
+                                      enableComment: false,
+                                      onCancelled: ()async{
+                                        // Navigator.of(context);
+                                        await DatabaseHelper.SendNeedReviewFromBoth(FirebaseAuth.instance.currentUser!.uid,BuyerModel.id);
+                                        // await DatabaseHelper.SendNeedReview(FirebaseAuth.instance.currentUser!.uid);
+                                        Fluttertoast.showToast(msg: "Please be Sure to Review him later");
+                                      },
+                                      onSubmitted: (RatingDialogResponse ) async {
+                                        if (kDebugMode) {
+                                          print('rating: ${RatingDialogResponse.rating}');
+                                        }
+                                        await usersRef.doc(buyerId).get().then((val) async {
+                                          List pointlist = List.from(val.data()!['Rating']);
+                                          pointlist.add(RatingDialogResponse.rating);
+                                          BuyerModel.rating = pointlist;
+                                           await usersRef.doc(buyerId).update(BuyerModel.toMap());
+                                           await DatabaseHelper.NeedReviewFromPurchaser(FirebaseAuth.instance.currentUser!.uid,BuyerModel.id);
+
+                                          Get.back();
+                                        });
+                                      },
+                                    );
+                                  },
+                                  );
+                                  // Get.back();
+
+                                }else{
+                                  Get.snackbar("Error", "Buyer id was not found",
+                                      colorText: AppColors.white,
+                                      icon: Icon(Icons.error_outline, color: Colors.white),
+                                      snackPosition: SnackPosition.TOP,
+                                      backgroundColor: AppColors.orange);
+                                }
+
+
+                              }, child: Text("Yes"),
+                              style: ElevatedButton.styleFrom(elevation: 0,backgroundColor: AppColors.orange))
+                             ]
+                           );
+
                          }
 
                        },
@@ -176,29 +258,111 @@ class _WatchSellScreenState extends State<WatchSellScreen> {
                          Get.focusScope!.unfocus();
                          if (_formKey.currentState != null &&
                              _formKey.currentState!.validate()){
-                           EasyLoading.show(status: "Loading");
-                           widget.watchModel.escrow=false;
-                           bool result= await DatabaseHelper().SellWatch(widget.watchModel,buyerId);
-                           EasyLoading.dismiss();
-                           if(result==true){
-                             Get.snackbar("Successful", "Watch send to escrow successfully",
-                                 colorText: AppColors.white,
-                                 icon: Icon(Icons.error_outline, color: Colors.white),
-                                 snackPosition: SnackPosition.TOP,
-                                 backgroundColor: AppColors.orange);
-                             Navigator.pop(context);
-                             Navigator.pop(context);
-                             Get.back();
+                           Get.defaultDialog(
+                               title: "Click here to confirm you have read and accepted the terms of the escrow agreement",
+                               middleText: "Are you sure you want to transfer this watch passport. Once it has been sent, it will move out of your collection into escrow. It will remain in escrow until the terms of the escrow agreement have been satisfied. Once satisfied, it will move to the new owner’s collection",
 
-                           }else{
-                             Get.snackbar("Error", "Buyer id was not found",
-                                 colorText: AppColors.white,
-                                 icon: Icon(Icons.error_outline, color: Colors.white),
-                                 snackPosition: SnackPosition.TOP,
-                                 backgroundColor: AppColors.orange);
-                           }
-                           //buyerId
-                           //history
+                               actions: [
+                                 GestureDetector(
+                                     onTap:(){
+                                       Navigator.push(context,
+                                           CupertinoPageRoute(
+                                             fullscreenDialog: true,
+                                             builder: (context) =>TermsAndConditions() ,));
+                                     },
+                                     child: Text("Terms and Conditions",style: TextStyle(color: AppColors.orange,fontSize: 18),)),
+
+                                 Row(
+                                   mainAxisAlignment:MainAxisAlignment.end,
+                                   children: [
+                                   ElevatedButton(
+                                       onPressed: (){
+                                         Navigator.pop(context);
+                                       }, child: Text("No"),
+                                       style: ElevatedButton.styleFrom(elevation: 0,backgroundColor: Colors.grey)),
+                                   SizedBox(width: 10,),
+                                   ElevatedButton(onPressed: () async {
+                                     Navigator.pop(context);
+                                     EasyLoading.show(status: "Loading");
+                                     setState(() {
+                                       widget.watchModel.escrow=false;
+                                     });
+
+                                     /////////////Converting the Date time into milliseconds
+                                     String dateString = widget.watchModel.createdAt;
+                                     String format = 'dd-MMM-yyyy';
+
+                                     // Create a DateFormat object to parse the date string
+                                     DateFormat formatter = DateFormat(format);
+
+                                     // Parse the date string into a DateTime object
+                                     DateTime date = formatter.parse(dateString);
+
+                                     // Get the milliseconds since Unix epoch
+                                     int millisecondsSinceEpoch = date.millisecondsSinceEpoch;
+                                     widget.watchModel.createdAt = millisecondsSinceEpoch;
+
+                                     print(millisecondsSinceEpoch); // Outp
+
+                                     print("escrow");
+                                     bool result= await DatabaseHelper().SellWatch(widget.watchModel,buyerId);
+                                     EasyLoading.dismiss();
+                                     if(result==true){
+                                       UserModel BuyerModel = UserModel();
+                                       BuyerModel = await DatabaseHelper().GetSpecificUser(buyerId);
+                                       Get.snackbar("Successful", "Watch send to escrow successfully",
+                                           colorText: AppColors.white,
+                                           icon: Icon(Icons.error_outline, color: Colors.white),
+                                           snackPosition: SnackPosition.TOP,
+                                           backgroundColor: AppColors.orange);
+                                       Navigator.pop(context);
+                                       Navigator.pop(context);
+                                       //////////////////////////////////////////////////
+                                       showDialog(context: context, builder: (context) {
+                                         return RatingDialog(
+                                           initialRating: 2,
+                                           starColor: AppColors.orange,
+                                           image: Image.asset("assets/images/hood.png",height: 50,),
+                                           message: const Text("Please rate the client",textAlign: TextAlign.center,style: TextStyle(color: AppColors.grey,fontSize: 12),),
+                                           starSize: 30.0,
+                                           title: const Text("Rating",textAlign: TextAlign.center,style: TextStyle(color: AppColors.orange),), submitButtonText: 'Submit',
+                                           enableComment: false,
+                                           showCloseButton: true,
+                                           onCancelled: () async {
+                                             Navigator.of(context);
+                                             await DatabaseHelper.SendNeedReviewFromBoth(FirebaseAuth.instance.currentUser!.uid,BuyerModel.id);
+                                             Fluttertoast.showToast(msg: "Please be Sure to Review him later");
+                                           },
+                                           onSubmitted: (RatingDialogResponse ) async {
+                                             if (kDebugMode) {
+                                               print('rating: ${RatingDialogResponse.rating}');
+                                             }
+                                             await usersRef.doc(buyerId).get().then((val) async {
+                                               List pointlist = List.from(val.data()!['Rating']);
+                                               pointlist.add(RatingDialogResponse.rating);
+                                               BuyerModel.rating = pointlist;
+                                               await usersRef.doc(buyerId).update(BuyerModel.toMap());
+                                               await DatabaseHelper.NeedReviewFromPurchaser(FirebaseAuth.instance.currentUser!.uid,BuyerModel.id);
+
+                                               Get.back();
+                                             });
+                                           },
+                                         );
+                                       },
+                                       );
+                                     }else{
+                                       Get.snackbar("Error", "Buyer id was not found",
+                                           colorText: AppColors.white,
+                                           icon: Icon(Icons.error_outline, color: Colors.white),
+                                           snackPosition: SnackPosition.TOP,
+                                           backgroundColor: AppColors.orange);
+                                     }
+                                   }, child: Text("Yes"),
+                                       style: ElevatedButton.styleFrom(elevation: 0,backgroundColor: AppColors.orange))
+                                 ],),
+                                 SizedBox(width: 10,),
+                               ]
+                           );
                          }
 
                        },

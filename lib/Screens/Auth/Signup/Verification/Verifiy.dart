@@ -324,7 +324,7 @@ class _CardScannerState extends State<CardScanner> {
           print("Sign up failed");
         }else{
           EasyLoading.dismiss();
-          Get.offAll(HomeScreen(userModel),
+          Get.offAll(HomeScreen(userModel,0),
               transition: Transition.leftToRight);
         }
       }

@@ -33,7 +33,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    countryController.text = "+92";
+    countryController.text ="+"+widget.userModel.CountryCode;
     super.initState();
     EasyLoading.dismiss();
   }
@@ -71,7 +71,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     height: 10,
                   ),
                   Text(
-                    "We need to register your phone without getting started!",
+                    "We need to register your phone before getting started!",
                     style: TextStyle(
                       fontSize: 16,
                     ),
@@ -93,13 +93,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         ),
                         SizedBox(
                           width: 40,
-                          child: TextField(
-                            controller: countryController,
-                            keyboardType: TextInputType.phone,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                            ),
-                          ),
+                          child: Text("+"+widget.userModel.CountryCode),
+                          // child: TextField(
+                          //   controller: countryController,
+                          //   keyboardType: TextInputType.phone,
+                          //   decoration: InputDecoration(
+                          //     border: InputBorder.none,
+                          //   ),
+                          // ),
                         ),
                         Text(
                           "|",

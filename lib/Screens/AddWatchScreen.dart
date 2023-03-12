@@ -40,7 +40,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
     } else {
       offeredBy = "Professional Dealer";
     }
-    watchModel.location="H: "+widget.userModel.house+" S: "+widget.userModel.street+" Town: "+widget.userModel.town+" ,"+widget.userModel.province+" ,"+widget.userModel.country;
+    watchModel.location=" "+widget.userModel.house+" "+widget.userModel.street+" "+widget.userModel.town+" ,"+widget.userModel.province+" ,"+widget.userModel.country;
     watchModel.forSale = value;
     userType = widget.userModel.type;
     DateTime now = DateTime.now();
@@ -371,7 +371,8 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                             )),
                             Expanded(
                                 child: Text(
-                              widget.userModel.rating,
+                              // widget.userModel.rating,
+                                  widget.userModel.rating.toStringAsFixed(1),
                               style: TextStyle(
                                   color: AppColors.background,
                                   fontFamily: "Gotham"),
@@ -430,7 +431,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                               fontFamily: 'Gotham',
                               color: AppColors.background)),
                       TextSpan(
-                          text: widget.userModel.rating,
+                          text: widget.userModel.rating.toStringAsFixed(1),
                           style: TextStyle(
                               fontFamily: 'Gotham', color: AppColors.orange)),
                     ],
@@ -572,7 +573,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                             //watchModel.forSale = value;
                             watchModel.price = Price;
                             watchModel.ownerId = widget.userModel.id;
-                            watchModel.createdAt = currentDate;
+                            watchModel.createdAt = DateTime.now().millisecondsSinceEpoch;
                             watchModel.escrow =true;
                             watchModel.verified=widget.userModel.idVerification;
                             //print("Imagesssss: "+imageFileList!.length.toString());
@@ -602,7 +603,7 @@ class _AddWatchScreenState extends State<AddWatchScreen> {
                         } else {
                           //watchModel.price = Price;
                           watchModel.ownerId = widget.userModel.id;
-                          watchModel.createdAt = currentDate;
+                          watchModel.createdAt = DateTime.now().millisecondsSinceEpoch;
                           watchModel.escrow=true;
                           watchModel.verified = widget.userModel.idVerification;
                           watchModel.images=imageFileList;

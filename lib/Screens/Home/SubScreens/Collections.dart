@@ -62,14 +62,14 @@ class _CollectionsState extends State<Collections> {
                           EasyLoading.dismiss();
                           return GridView.builder(
                               gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: 2),
                               physics: ScrollPhysics(),
                               shrinkWrap: true,
                               primary: true,
                               itemCount:  snapshot.data.docs.length,
                               itemBuilder: (context, index) {
-                                return CollectionTiles(snapshot.data.docs[index]);
+                                return CollectionTiles(snapshot.data.docs[index],widget.userModel);
                               });
                         }
                       }),
@@ -105,7 +105,8 @@ EasyLoading.dismiss();
 //Extra work
 class CollectionTiles extends StatefulWidget {
   final data;
-  const CollectionTiles(this.data,{Key? key}) : super(key: key);
+  UserModel usermodel;
+  CollectionTiles(this.data,this.usermodel,{Key? key}) : super(key: key);
 
   @override
   State<CollectionTiles> createState() => _CollectionTilesState();
@@ -120,7 +121,7 @@ class _CollectionTilesState extends State<CollectionTiles> {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: () {
-          Get.to(()=>WatchDetailScreen(widget.data["watchId"]), transition: Transition.zoom);
+          Get.to(()=>WatchDetailScreen(widget.data["watchId"],widget.usermodel), transition: Transition.zoom);
         },
         child: Container(
           width: 200,

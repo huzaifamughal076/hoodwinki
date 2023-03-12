@@ -1,5 +1,5 @@
 class UserModel {
-    var id,image, name, email, dob, house, street, town, province, zip, country,about,businessDetails,type,createdAt,rating,idVerification;
+    var id,image, name, email, dob, house, street, town, province, zip, country,about,businessDetails,type,createdAt,rating,idVerification,CountryCode;
 
     UserModel(
         {this.id,
@@ -16,7 +16,7 @@ class UserModel {
             this.about,
             this.businessDetails,
             this.type,
-            this.createdAt,this.rating,this.idVerification});
+            this.createdAt,this.rating,this.idVerification,this.CountryCode});
 
     Map<String, dynamic> toMap() {
         Map<String, dynamic> map = <String, dynamic>{};
@@ -37,6 +37,7 @@ class UserModel {
         map['Created at']=createdAt;
         map['Rating']=rating;
         map['Verified']=idVerification;
+        map['CountryCode']=CountryCode;
         return map;
     }
 
@@ -59,6 +60,7 @@ class UserModel {
             createdAt: map['Created at'],
             rating: map['Rating'],
             idVerification: map['Verified'],
+            CountryCode: map['CountryCode']
         );
     }
 }
